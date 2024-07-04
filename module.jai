@@ -416,11 +416,12 @@ PopGizmoMatrix :: ()
     pop (*C.matrix_stack);
 }
 
-DraggingBehavior :: (id : u32, hovered : bool, interaction : GizmoInteractionType, translation : Vec3f) -> started_dragging : bool, dragging : bool
+DraggingBehavior :: (id : u32, hovered : bool, interaction : GizmoInteractionType, translation : Vec3f) -> started_dragging : bool, dragging : bool, cancelled_dragging : bool
 {
     C := GetContext ();
 
     started_dragging := false;
+    cancelled_dragging := false;
 
     if C.active_id == 0 && C.hovered_id == 0 && hovered
         C.hovered_id = id;
@@ -437,7 +438,12 @@ DraggingBehavior :: (id : u32, hovered : bool, interaction : GizmoInteractionTyp
 
     if C.active_id == id
     {
-        if IsKeyDown (.Interact)
+        if !started_dragging && IsKeyPressed (.Cancel)
+        {
+            C.active_id = 0;
+            cancelled_dragging = true;
+        }
+        else if IsKeyDown (.Interact)
         {
             C.next_active_id = id;
             C.active_interaction = interaction;
@@ -449,5 +455,5 @@ DraggingBehavior :: (id : u32, hovered : bool, interaction : GizmoInteractionTyp
         }
     }
 
-    return started_dragging, C.active_id == id;
+    return started_dragging, C.active_id == id, cancelled_dragging;
 }

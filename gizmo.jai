@@ -100,7 +100,12 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
             widget_size * C.style.translation_view_circle_size
         );
 
-        drag_start, dragging := DraggingBehavior (view_id, hovered, .Translation_Plane, translation.*);
+        drag_start, dragging, cancelled_dragging
+            := DraggingBehavior (view_id, hovered, .Translation_Plane, translation.*);
+
+        if cancelled_dragging
+            result = C.drag_start_translation;
+
         if dragging
         {
             if drag_start
@@ -148,7 +153,12 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
             C.style.translation_handle_thickness + C.line_interaction_threshold
         );
 
-        drag_start, dragging := DraggingBehavior (id, hovered, .Translation_Axis, translation.*);
+        drag_start, dragging, cancelled_dragging
+            := DraggingBehavior (id, hovered, .Translation_Axis, translation.*);
+
+        if cancelled_dragging
+            result = C.drag_start_translation;
+
         if dragging
         {
             if drag_start
@@ -280,7 +290,12 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
             C.style.scale_handle_thickness + C.line_interaction_threshold
         );
 
-        drag_start, dragging := DraggingBehavior (id, hovered, .Scale_Axis, translation);
+        drag_start, dragging, cancelled_dragging
+            := DraggingBehavior (id, hovered, .Scale_Axis, translation);
+
+        if cancelled_dragging
+            result = C.drag_start_scale;
+
         if dragging
         {
             if drag_start
@@ -354,7 +369,12 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
             widget_size * C.style.scale_all_outer_circle_size
         );
 
-        drag_start, dragging := DraggingBehavior (all_id, hovered, .Scale_All, translation);
+        drag_start, dragging, cancelled_dragging
+            := DraggingBehavior (all_id, hovered, .Scale_All, translation);
+
+        if cancelled_dragging
+            result = C.drag_start_scale;
+
         if dragging
         {
             if drag_start
@@ -510,7 +530,12 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
             tangent, bitangent
         );
 
-        drag_start, dragging := DraggingBehavior (id, hovered, .Rotation_Axis, translation);
+        drag_start, dragging, cancelled_dragging
+            := DraggingBehavior (id, hovered, .Rotation_Axis, translation);
+
+        if cancelled_dragging
+            result = C.drag_start_rotation;
+
         if dragging
         {
             if drag_start
@@ -591,7 +616,12 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
     }
 
     hovered := IsCircleFilledHovered (translation, camera_forward, widget_size);
-    drag_start, dragging := DraggingBehavior (trackball_id, hovered, .Rotation_Trackball, translation);
+    drag_start, dragging, cancelled_dragging
+        := DraggingBehavior (trackball_id, hovered, .Rotation_Trackball, translation);
+
+    if cancelled_dragging
+        result = C.drag_start_rotation;
+
     if dragging
     {
         if drag_start
