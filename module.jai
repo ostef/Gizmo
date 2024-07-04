@@ -282,7 +282,6 @@ NewFrame :: (
 
     C.display_size = display_size;
     C.mouse_pos = mouse_pos;
-    memcpy (C.prev_key_states.data, C.key_states.data, size_of (type_of (C.key_states)));
 }
 
 EndFrame :: ()
@@ -303,6 +302,8 @@ EndFrame :: ()
     }
 
     C := GetContext ();
+
+    memcpy (C.prev_key_states.data, C.key_states.data, size_of (type_of (C.key_states)));
 
     // Draw cursor
     is_behind, active_center := WorldToScreen (C.active_translation);
