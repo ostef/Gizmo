@@ -422,7 +422,7 @@ QuatfFromMatrix :: inline (mat : $T/interface AnyMatrix3) -> Quatf #must
 QuatfFromMatrixNoChecks :: inline (mat : $T/interface AnyMatrix3) -> Quatf #must
 {
     /* Caller must ensure matrices aren't negative for valid results, see: T24291, T94231. */
-    // assert (determinant (_mat) > 0);
+    // assert (determinant (mat) > 0);
 
     /* Method outlined by Mike Day, ref: https://math.stackexchange.com/a/3183435/220949
         * with an additional `sqrtf(..)` for higher precision result.
@@ -515,6 +515,6 @@ QuatfFromMatrixNoChecks :: inline (mat : $T/interface AnyMatrix3) -> Quatf #must
     }
 
     // Not sure why I need to return the conjugate, the original code returns
-    // matrices quaternions that go in the opposite direction
+    // quaternions that go in the opposite direction
     return conjugate (q);
 }
