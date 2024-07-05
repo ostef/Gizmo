@@ -390,25 +390,25 @@ PopID :: ()
     pop (*C.id_stack);
 }
 
-GetGizmoMatrix :: () -> Mat4f #must
+GetGizmoMatrix :: (peek := 0) -> Mat4f #must
 {
     C := GetContext ();
-    if C.matrix_stack.count > 0
-        return C.matrix_stack[C.matrix_stack.count - 1];
 
-    return .{};
+    if peek < C.matrix_stack.count
+        return C.matrix_stack[C.matrix_stack.count - 1 - peek];
+
+    return Matrix4_Identity;
 }
 
 PushGizmoMatrix :: (mat : Mat4f, apply_previous_matrix := true)
 {
     C := GetContext ();
-    transformed : Mat4f = ---;
-    if apply_previous_matrix && C.matrix_stack.count > 0
-        transformed = C.matrix_stack[C.matrix_stack.count - 1] * mat;
-    else
-        transformed = mat;
 
-    array_add (*C.matrix_stack, transformed);
+    m := mat;
+    if C.matrix_stack.count > 0 && apply_previous_matrix
+        m = C.matrix_stack[C.matrix_stack.count - 1] * mat;
+
+    array_add (*C.matrix_stack, m);
 }
 
 PopGizmoMatrix :: ()

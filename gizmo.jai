@@ -28,18 +28,18 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
     PushID (id);
     defer PopID ();
 
+    model_matrix := GetGizmoMatrix ();
+    model_rotation := RotationMatrix (model_matrix);
+
+    result := translation.*;
+    defer translation.* = result;
+
     camera_forward := ForwardVector (C.camera_transform);
     camera_right := RightVector (C.camera_transform);
     camera_up := UpVector (C.camera_transform);
     widget_size := CalculateWidgetSize (translation.*);
 
-    model_matrix := GetGizmoMatrix ();
-    model_matrix = RotationMatrix (model_matrix);
-
     style := C.style;
-
-    result := translation.*;
-    defer translation.* = result;
 
     modified := false;
 
@@ -59,7 +59,7 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
         .{0,0,1},
     ];
     for * axes_vectors
-        it.* = transform_vector (model_matrix, it.*);
+        it.* = transform_vector (model_rotation, it.*);
 
     axes_colors := Vec4f.[
         style.colors[StyleColor.X_Axis],
@@ -182,8 +182,8 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
         if dragging
         {
             DrawLine (
-                C.drag_start_translation - axes_vectors[i] * 500,
-                C.drag_start_translation + axes_vectors[i] * 500,
+                translation.* - axes_vectors[i] * 500,
+                translation.* + axes_vectors[i] * 500,
                 axes_guide_colors[i],
                 style.guide_line_thickness
             );
@@ -693,14 +693,37 @@ GizmoTransform :: (
     flags : GizmoFlags = 0
 ) -> bool
 {
+    parent := GetGizmoMatrix ();
+    inv_parent := inverse (parent);
+
+    matrix := make_translation_matrix4 (translation.*)
+        * rotation_matrix (Mat4f, rotation.*)
+        * make_scale_matrix4 (scale.*);
+
+    PushGizmoMatrix (matrix);
+    defer PopGizmoMatrix ();
+
     if #complete type ==
     {
     case .Translate;
+        translation.* = transform_point (parent, translation.*);
+        defer translation.* = transform_point (inv_parent, translation.*);
+
         return GizmoTranslation (id, translation, flags);
+
     case .Rotate;
+        // Transform the quaternion to global space first
+        // Transform back to local space afterwards
+        q := QuatfFromMatrix (parent);
+        inv_q := conjugate (q);
+        rotation.* = q * rotation.*;
+        defer rotation.* = inv_q * rotation.*;
+
         return GizmoRotation (id, rotation, flags);
+
     case .Scale;
         return GizmoScale (id, scale, flags);
+
     case .None;
         return false;
     }

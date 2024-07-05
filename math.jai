@@ -328,8 +328,6 @@ IsLineHovered :: (start : Vec3f, end : Vec3f, threshold : float) -> bool #must
 {
     C := GetContext ();
 
-    projection := C.persp_projection * C.camera_view;
-
     is_behind, proj_start := WorldToScreen (start);
     if is_behind
         return false;
@@ -393,4 +391,130 @@ IsFacingCircleHovered :: (center : Vec3f, radius : float, thickness : float, tan
     }
 
     return false;
+}
+
+ToMat3f :: (mat : Mat4f) -> Mat3f #must
+{
+    return .{
+        mat._11, mat._12, mat._13,
+        mat._21, mat._22, mat._23,
+        mat._31, mat._32, mat._33,
+    };
+}
+
+QuatfFromMatrix :: inline (mat : $T/interface AnyMatrix3) -> Quatf #must
+{
+    #if T == Mat4f
+        ortho, _, det := polar_decomp (ToMat3f (mat));
+    else #if T == Mat3f
+        ortho, _, det := polar_decomp (mat);
+
+    nan, inf := is_nan_is_inf (det);
+    if det == 0 || nan || inf
+        return Quatf.{0,0,0,1};
+
+    return QuatfFromMatrixNoChecks (ortho * det);
+}
+
+// From Blender source code:
+// https://github.com/blender/blender/blob/756538b4a117cb51a15e848fa6170143b6aafcd8/source/blender/blenlib/intern/math_rotation.c#L272
+// This function will fail for matrices that are not ortho normalized and positive
+QuatfFromMatrixNoChecks :: inline (mat : $T/interface AnyMatrix3) -> Quatf #must
+{
+    /* Caller must ensure matrices aren't negative for valid results, see: T24291, T94231. */
+    // assert (determinant (_mat) > 0);
+
+    /* Method outlined by Mike Day, ref: https://math.stackexchange.com/a/3183435/220949
+        * with an additional `sqrtf(..)` for higher precision result.
+        * Removing the `sqrt` causes tests to fail unless the precision is set to 1e-6 or larger. */
+
+    q : Quatf = ---;
+
+    if mat._33 < 0
+    {
+        if mat._11 > mat._22
+        {
+            trace := 1 + mat._11 - mat._22 - mat._33;
+            s := 2 * sqrt (trace);
+            if mat._23 < mat._32
+            {
+                /* Ensure W is non-negative for a canonical result. */
+                s = -s;
+            }
+            q.x = 0.25 * s;
+            s = 1 / s;
+            q.w = (mat._23 - mat._32) * s;
+            q.y = (mat._12 + mat._21) * s;
+            q.z = (mat._31 + mat._13) * s;
+            if trace == 1 && q.w == 0 && q.y == 0 && q.z == 0
+            {
+                /* Avoids the need to normalize the degenerate case. */
+                q.x = 1;
+            }
+        }
+        else
+        {
+            trace := 1 - mat._11 + mat._22 - mat._33;
+            s := 2 * sqrt (trace);
+            if mat._31 < mat._13
+            {
+                /* Ensure W is non-negative for a canonical result. */
+                s = -s;
+            }
+            q.y = 0.25 * s;
+            s = 1 / s;
+            q.w = (mat._31 - mat._13) * s;
+            q.x = (mat._12 + mat._21) * s;
+            q.z = (mat._23 + mat._32) * s;
+            if trace == 1 && q.w == 0 && q.x == 0 && q.z == 0
+            {
+                /* Avoids the need to normalize the degenerate case. */
+                q.y = 1;
+            }
+        }
+    }
+    else
+    {
+        if mat._11 < -mat._22
+        {
+            trace := 1 - mat._11 - mat._22 + mat._33;
+            s := 2 * sqrt (trace);
+            if mat._12 < mat._21
+            {
+                /* Ensure W is non-negative for a canonical result. */
+                s = -s;
+            }
+            q.z = 0.25 * s;
+            s = 1 / s;
+            q.w = (mat._12 - mat._21) * s;
+            q.x = (mat._31 + mat._13) * s;
+            q.y = (mat._23 + mat._32) * s;
+            if trace == 1 && q.w == 0 && q.x == 0 && q.y == 0
+            {
+                /* Avoids the need to normalize the degenerate case. */
+                q.z = 1;
+            }
+        }
+        else
+        {
+            /* NOTE(@campbellbarton): A zero matrix will fall through to this block,
+                * needed so a zero scaled matrices to return a quaternion without rotation, see: T101848. */
+            trace := 1 + mat._11 + mat._22 + mat._33;
+            s := 2 * sqrt (trace);
+            q.w = 0.25 * s;
+            s = 1 / s;
+            q.x = (mat._23 - mat._32) * s;
+            q.y = (mat._31 - mat._13) * s;
+            q.z = (mat._12 - mat._21) * s;
+            if trace == 1 && q.x == 0 && q.y == 0 && q.z == 0
+            {
+                /* Avoids the need to normalize the degenerate case. */
+                q.w = 1;
+            }
+        }
+    }
+
+    // Not sure why I need to return the conjugate, the original code returns
+    // matrices quaternions that go in the opposite direction
+    return conjugate (q);
 }
