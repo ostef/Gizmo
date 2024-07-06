@@ -166,8 +166,13 @@ DrawArrow :: (start : Vec3f, end : Vec3f, color : Vec4f, thickness : float, size
 
     clip_start, clip_end := ClipLine (start, end);
 
-    _, proj_start := WorldToScreen (clip_start);
-    _, proj_end := WorldToScreen (clip_end);
+    is_behind, proj_start := WorldToScreen (clip_start);
+    if is_behind
+        return;
+
+    is_behind=, proj_end := WorldToScreen (clip_end);
+    if is_behind
+        return;
 
     DrawArrow2D (proj_start, proj_end, color, thickness, size, head_aspect_ratio);
 }
