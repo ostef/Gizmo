@@ -253,9 +253,7 @@ IsKeyReleased :: inline (key : Key) -> bool #must
     return C.prev_key_states[key] && !C.key_states[key];
 }
 
-NewFrame :: (
-    display_size : Vec2f,
-    mouse_pos : Vec2f,
+SetCamera :: (
     persp_projection : Mat4f,
     ortho_projection : Mat4f,
     view : Mat4f,
@@ -272,7 +270,14 @@ NewFrame :: (
     C.camera_transform = inverse (view);
     C.camera_near = near;
     C.camera_far = far;
+}
 
+NewFrame :: (
+    display_size : Vec2f,
+    mouse_pos : Vec2f
+)
+{
+    C := GetContext ();
     C.hovered_id = 0;
     C.active_id = C.next_active_id;
     C.next_active_id = 0;
