@@ -67,8 +67,7 @@ DrawArrow2D :: (start : Vec2f, end : Vec2f, color : Vec4f, thickness : float, si
 
     line_dir := normalize (end - start);
 
-    theta := atan2 (line_dir.x, -line_dir.y);
-    offset := Vec2f.{cos (theta), sin (theta)};
+    offset := Vec2f.{-line_dir.y, line_dir.x};
     line_offset := offset * thickness * 0.5;
 
     DrawTriangle2D (
@@ -101,8 +100,7 @@ DrawSquareArrow2D :: (start : Vec2f, end : Vec2f, color : Vec4f, thickness : flo
 
     line_dir := normalize (end - start);
 
-    theta := atan2 (line_dir.x, -line_dir.y);
-    offset := Vec2f.{cos (theta), sin (theta)};
+    offset := Vec2f.{-line_dir.y, line_dir.x};
     line_offset := offset * thickness * 0.5;
 
     DrawTriangle2D (
