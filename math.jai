@@ -1,3 +1,25 @@
+IsFinite :: inline (val : float) -> bool #must
+{
+    nan, inf := is_nan_is_inf (val);
+
+    return !nan && !inf;
+}
+
+IsFinite :: inline (val : Vec2f) -> bool #must
+{
+    return IsFinite (val.x) && IsFinite (val.y);
+}
+
+IsFinite :: inline (val : Vec3f) -> bool #must
+{
+    return IsFinite (val.x) && IsFinite (val.y) && IsFinite (val.z);
+}
+
+IsFinite :: inline (val : Vec4f) -> bool #must
+{
+    return IsFinite (val.x) && IsFinite (val.y) && IsFinite (val.z) && IsFinite (val.w);
+}
+
 Sign :: inline (val : $T) -> T #must
 {
     if val < 0
@@ -216,6 +238,9 @@ Project2DPointOn3DSphere :: (point : Vec2f, world_space_center : Vec3f, world_sp
 ProjectPointOnLine2D :: (point : Vec2f, start : Vec2f, end : Vec2f) -> Vec2f #must, t : float
 {
     dir := end - start;
+    if !IsFinite (dir)
+        return start, 0;
+
     len := normalize (*dir);
     t := dot (point - start, dir) / dot (dir, dir);
     t = clamp (t, 0, len);
@@ -225,7 +250,11 @@ ProjectPointOnLine2D :: (point : Vec2f, start : Vec2f, end : Vec2f) -> Vec2f #mu
 
 ProjectPointOnLine :: (point : Vec3f, start : Vec3f, end : Vec3f) -> Vec3f #must, t : float
 {
-    dir, len := normalize (end - start);
+    dir := end - start;
+    if !IsFinite (dir)
+        return start, 0;
+
+    len := normalize (*dir);
     t := dot (point - start, dir) / dot (dir, dir);
     t = clamp (t, 0, len);
 
@@ -234,7 +263,11 @@ ProjectPointOnLine :: (point : Vec3f, start : Vec3f, end : Vec3f) -> Vec3f #must
 
 ProjectPointOnInfiniteLine :: (point : Vec3f, start : Vec3f, end : Vec3f) -> Vec3f #must, t : float
 {
-    dir, len := normalize (end - start);
+    dir := end - start;
+    if !IsFinite (dir)
+        return start, 0;
+
+    len := normalize (*dir);
     t := dot (point - start, dir) / dot (dir, dir);
 
     return start + t * dir, t;
@@ -299,6 +332,9 @@ RayIntersectsPlane :: (ray_origin : Vec3f, ray_dir : Vec3f, plane_origin : Vec3f
 LineIntersectsPlane :: (line_start : Vec3f, line_end : Vec3f, plane_origin : Vec3f, plane_normal : Vec3f) -> bool #must, Vec3f #must
 {
     line_dir := line_end - line_start;
+    if !IsFinite (line_dir)
+        return false, .{};
+
     line_len := normalize (*line_dir);
     line_plane := dot (plane_normal, line_dir);
 
@@ -318,7 +354,11 @@ IsLineHovered2D :: (start : Vec2f, end : Vec2f, threshold : float) -> bool #must
 {
     C := GetContext ();
 
-    line_dir := normalize (end - start);
+    line_dir := end - start;
+    if !IsFinite (line_dir)
+        return false;
+
+    normalize (*line_dir);
     mouse_on_line := ProjectPointOnLine2D (C.mouse_pos, start, end);
 
     return distance (mouse_on_line, C.mouse_pos) < threshold;

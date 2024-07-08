@@ -65,7 +65,11 @@ DrawArrow2D :: (start : Vec2f, end : Vec2f, color : Vec4f, thickness : float, si
     if thickness <= 0 || color.w <= 0
         return;
 
-    line_dir := normalize (end - start);
+    line_dir := end - start;
+    if !IsFinite (line_dir)
+        return;
+
+    normalize (*line_dir);
 
     offset := Vec2f.{-line_dir.y, line_dir.x};
     line_offset := offset * thickness * 0.5;
@@ -98,8 +102,11 @@ DrawSquareArrow2D :: (start : Vec2f, end : Vec2f, color : Vec4f, thickness : flo
     if thickness <= 0 || color.w <= 0
         return;
 
-    line_dir := normalize (end - start);
+    line_dir := end - start;
+    if !IsFinite (line_dir)
+        return;
 
+    normalize (*line_dir);
     offset := Vec2f.{-line_dir.y, line_dir.x};
     line_offset := offset * thickness * 0.5;
 
@@ -141,6 +148,9 @@ DrawDashedLine2D :: (start : Vec2f, end : Vec2f, line_len : float, spacing : flo
     spacing = max (spacing, 0);
 
     dir := end - start;
+    if !IsFinite (dir)
+        return;
+
     len := normalize (*dir);
 
     i := 0.0;
