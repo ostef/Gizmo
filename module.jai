@@ -185,6 +185,7 @@ GizmoFlags :: enum_flags
     No_Y_Axis;
     No_Z_Axis;
     No_View_Axis;
+    No_Trackball;
 
     No_Translation;
     No_Scale;

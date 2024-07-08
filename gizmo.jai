@@ -615,70 +615,73 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
         }
     }
 
-    hovered := IsCircleFilledHovered (translation, camera_forward, widget_size);
-    drag_start, dragging, cancelled_dragging
-        := DraggingBehavior (trackball_id, hovered, .Rotation_Trackball, translation);
-
-    if cancelled_dragging
-        result = C.drag_start_rotation;
-
-    if dragging
+    if !(flags & .No_Trackball)
     {
-        if drag_start
+        hovered := IsCircleFilledHovered (translation, camera_forward, widget_size);
+        drag_start, dragging, cancelled_dragging
+            := DraggingBehavior (trackball_id, hovered, .Rotation_Trackball, translation);
+
+        if cancelled_dragging
+            result = C.drag_start_rotation;
+
+        if dragging
         {
-            C.drag_start_rotation = rotation.*;
+            if drag_start
+            {
+                C.drag_start_rotation = rotation.*;
+            }
+
+            camera_rotation := get_rotation (C.camera_view);
+            start_axis := Project2DPointOn3DSphere (C.mouse_click_position, translation, widget_size);
+            start_axis = normalize (start_axis);
+            start_axis = rotate (start_axis, camera_rotation);
+
+            curr_axis := Project2DPointOn3DSphere (C.mouse_pos, translation, widget_size);
+            curr_axis = normalize (curr_axis);
+            curr_axis = rotate (curr_axis, camera_rotation);
+
+            result = C.drag_start_rotation * QuatfFromVectorToVector (start_axis, curr_axis);
+
+            modified = true;
         }
 
-        camera_rotation := get_rotation (C.camera_view);
-        start_axis := Project2DPointOn3DSphere (C.mouse_click_position, translation, widget_size);
-        start_axis = normalize (start_axis);
-        start_axis = rotate (start_axis, camera_rotation);
+        trackball_color := ifx C.hovered_id == trackball_id || C.active_id == trackball_id
+            then C.style.colors[StyleColor.Rotation_Trackball_Active]
+            else C.style.colors[StyleColor.Rotation_Trackball];
 
-        curr_axis := Project2DPointOn3DSphere (C.mouse_pos, translation, widget_size);
-        curr_axis = normalize (curr_axis);
-        curr_axis = rotate (curr_axis, camera_rotation);
-
-        result = C.drag_start_rotation * QuatfFromVectorToVector (start_axis, curr_axis);
-
-        modified = true;
-    }
-
-    trackball_color := ifx C.hovered_id == trackball_id || C.active_id == trackball_id
-        then C.style.colors[StyleColor.Rotation_Trackball_Active]
-        else C.style.colors[StyleColor.Rotation_Trackball];
-
-    if !dragging
-    {
-        DrawCircleFilled (
-            translation,
-            widget_size,
-            trackball_color,
-            RightVector (C.camera_transform), UpVector (C.camera_transform)
-        );
-    }
-    else
-    {
-        DrawFacingCircle (
-            translation,
-            widget_size,
-            C.style.colors[StyleColor.Z_Axis],
-            C.style.rotation_handle_thickness,
-            axes_vectors[0], axes_vectors[1]
-        );
-        DrawFacingCircle (
-            translation,
-            widget_size,
-            C.style.colors[StyleColor.Y_Axis],
-            C.style.rotation_handle_thickness,
-            axes_vectors[2], axes_vectors[0]
-        );
-        DrawFacingCircle (
-            translation,
-            widget_size,
-            C.style.colors[StyleColor.X_Axis],
-            C.style.rotation_handle_thickness,
-            axes_vectors[1], axes_vectors[2]
-        );
+        if !dragging
+        {
+            DrawCircleFilled (
+                translation,
+                widget_size,
+                trackball_color,
+                RightVector (C.camera_transform), UpVector (C.camera_transform)
+            );
+        }
+        else
+        {
+            DrawFacingCircle (
+                translation,
+                widget_size,
+                C.style.colors[StyleColor.Z_Axis],
+                C.style.rotation_handle_thickness,
+                axes_vectors[0], axes_vectors[1]
+            );
+            DrawFacingCircle (
+                translation,
+                widget_size,
+                C.style.colors[StyleColor.Y_Axis],
+                C.style.rotation_handle_thickness,
+                axes_vectors[2], axes_vectors[0]
+            );
+            DrawFacingCircle (
+                translation,
+                widget_size,
+                C.style.colors[StyleColor.X_Axis],
+                C.style.rotation_handle_thickness,
+                axes_vectors[1], axes_vectors[2]
+            );
+        }
     }
 
     return modified;
