@@ -92,7 +92,7 @@ GizmoContext :: struct
     id_stack : [..]u32;
     matrix_stack : [..]Mat4f;
 
-    mouse_click_position : Vec2f;
+    mouse_drag_start : Vec2f;
 
     drag_start_translation : Vec3f;
     drag_start_translation_offset : Vec3f;
@@ -496,7 +496,7 @@ DraggingBehavior :: (id : u32, hovered : bool, interaction : GizmoInteractionTyp
         C.active_id = id;
         C.next_active_id = id;
 
-        C.mouse_click_position = C.mouse_pos;
+        C.mouse_drag_start = C.mouse_pos;
 
         started_dragging = true;
     }
@@ -538,18 +538,21 @@ KeyboardBehavior :: (id : u32, type : KeyboardInteractionType, translation : Vec
         if type == .Translate && IsKeyPressed (.Translate)
         {
             C.keyboard_interaction = .Translate;
+            C.mouse_drag_start = C.mouse_pos;
             drag_start = true;
         }
 
         if type == .Scale && IsKeyPressed (.Scale)
         {
             C.keyboard_interaction = .Scale;
+            C.mouse_drag_start = C.mouse_pos;
             drag_start = true;
         }
 
         if type == .Rotate && IsKeyPressed (.Rotate)
         {
             C.keyboard_interaction = .Rotate;
+            C.mouse_drag_start = C.mouse_pos;
             drag_start = true;
         }
     }
