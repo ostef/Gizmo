@@ -1,4 +1,5 @@
 // @Todo: fix trackball rotation gizmo not working correctly at certain camera angles
+// @Todo: handle flags in KeyboardBehavior
 
 #import "Basic";
 #import "Math";
@@ -28,6 +29,7 @@ Key :: enum
     Scale;
 
     Interact;
+    Submit;
     Cancel;
 
     Count;
@@ -531,6 +533,13 @@ KeyboardBehavior :: (id : u32, type : KeyboardInteractionType, translation : Vec
         return false, false, false, false;
 
     C.next_keyboard_focus_id = id;
+
+    if C.keyboard_interaction == type && IsKeyPressed (.Submit)
+    {
+        C.keyboard_interaction = .None;
+        C.keyboard_interaction_flags = 0;
+        return false, false, false, false;
+    }
 
     drag_start : bool;
     if C.keyboard_interaction != type
