@@ -52,8 +52,6 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
 
     style := C.style;
 
-    modified := false;
-
     axes_ids := u32.[
         GetID ("translate_x"),
         GetID ("translate_y"),
@@ -145,8 +143,6 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
 
             if intersects
                 result = point + C.drag_start_translation_offset;
-
-            modified = true;
         }
 
         color := ifx C.hovered_id == view_id || C.active_id == view_id
@@ -218,8 +214,6 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
             }
 
             result = point + C.drag_start_translation_offset;
-
-            modified = true;
         }
 
         color := ifx C.hovered_id == id || C.active_id == id
@@ -252,7 +246,7 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
         );
     }
 
-    return modified;
+    return translation.* != result;
 }
 
 GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
@@ -282,8 +276,6 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
 
     result := scale.*;
     defer scale.* = result;
-
-    modified := false;
 
     all_id := GetID ("scale_all");
     axes_ids := u32.[
@@ -373,8 +365,6 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
                 result.component[i] = s * abs (C.drag_start_scale.component[i]) * ratio;
 
                 end = translation + widget_size * C.drag_start_scale_axis * s * ratio;
-
-                modified = true;
             }
         }
 
@@ -454,7 +444,6 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
                 result = abs (C.drag_start_scale) * abs (t2 / t1);
                 result = result * s;
                 widget_size *= t2 / t1;
-                modified = true;
             }
         }
 
@@ -484,7 +473,7 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
         }
     }
 
-    return modified;
+    return scale.* != result;
 }
 
 GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> bool
@@ -511,7 +500,6 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
 
     result := rotation.*;
     defer rotation.* = result;
-    modified := false;
 
     trackball_id := GetID ("rotate_trackball");
     axes_ids := u32.[
@@ -640,8 +628,6 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
                     C.style.rotation_handle_thickness
                 );
             }
-
-            modified = true;
         }
 
         color := ifx C.hovered_id == id || C.active_id == id
@@ -695,8 +681,6 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
             curr_axis = rotate (curr_axis, camera_rotation);
 
             result = C.drag_start_rotation * QuatfFromVectorToVector (start_axis, curr_axis);
-
-            modified = true;
         }
 
         trackball_color := ifx C.hovered_id == trackball_id || C.active_id == trackball_id
@@ -738,7 +722,7 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
         }
     }
 
-    return modified;
+    return rotation.* != result;
 }
 
 GizmoTransform :: (
