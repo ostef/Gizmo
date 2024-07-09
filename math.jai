@@ -290,7 +290,7 @@ RayFromMouse :: () -> origin : Vec3f #must, direction : Vec3f #must
     return pos, dir;
 }
 
-NearestPointOnRayAndLine :: (ray_origin : Vec3f, ray_dir : Vec3f, line_origin : Vec3f, line_dir : Vec3f) -> point_on_line : Vec3f, point_on_ray : Vec3f, ray_dist : float, line_dist : float
+NearestPointOnRayAndLine :: (ray_origin : Vec3f, ray_dir : Vec3f, line_origin : Vec3f, line_dir : Vec3f) -> point_on_ray : Vec3f, point_on_line : Vec3f, line_dist : float, ray_dist : float
 {
     p := ray_origin - line_origin;
     q := dot (ray_dir, line_dir);
