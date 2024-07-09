@@ -794,6 +794,8 @@ GizmoTransform :: (
     flags : GizmoFlags = 0
 ) -> bool
 {
+    C := GetContext ();
+
     parent := GetGizmoMatrix ();
     inv_parent := inverse (parent);
 
@@ -803,6 +805,30 @@ GizmoTransform :: (
 
     PushGizmoMatrix (matrix);
     defer PopGizmoMatrix ();
+
+    gizmo_id := GetID (id);
+    if C.keyboard_focus_id == gizmo_id && C.active_id == 0
+    {
+        if IsKeyPressed (.Translate)
+            type = .Translate;
+        if IsKeyPressed (.Rotate)
+            type = .Rotate;
+        if IsKeyPressed (.Scale)
+            type = .Scale;
+    }
+
+    if C.active_id == gizmo_id
+    {
+        if C.keyboard_interaction ==
+        {
+        case .Translate;
+            type = .Translate;
+        case .Rotate;
+            type = .Rotate;
+        case .Scale;
+            type = .Scale;
+        }
+    }
 
     if #complete type ==
     {

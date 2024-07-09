@@ -534,6 +534,9 @@ KeyboardBehavior :: (id : u32, type : KeyboardInteractionType, translation : Vec
 
     C.next_keyboard_focus_id = id;
 
+    if C.active_id != 0 && C.active_id != id
+        return false, false, false, false;
+
     if C.keyboard_interaction == type && IsKeyPressed (.Submit)
     {
         C.keyboard_interaction = .None;
