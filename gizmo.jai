@@ -25,6 +25,17 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
     if flags & .No_Translation
         return false;
 
+    gizmo_id := GetID (id);
+    kb_drag_start, kb_dragging, kb_drag_cancel, kb_drag_reset
+        := KeyboardBehavior (gizmo_id, .Translate, translation.*);
+    kb_interact := kb_dragging || kb_drag_cancel;
+
+    if kb_drag_start
+        C.drag_start_translation = translation.*;
+
+    if kb_drag_reset
+        translation.* = C.drag_start_translation;
+
     PushID (id);
     defer PopID ();
 
@@ -91,6 +102,7 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
 
     ignore_view := flags & .No_View_Axis != 0;
     ignore_view ||= C.active_id != view_id && array_find (axes_ids, C.active_id);
+    ignore_view ||= C.active_id == gizmo_id && C.keyboard_interaction_flags != 0;
 
     if !ignore_view
     {
@@ -100,14 +112,27 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
             widget_size * C.style.translation_view_circle_size
         );
 
-        drag_start, dragging, cancelled_dragging
-            := DraggingBehavior (view_id, hovered, .Translation_Plane, translation.*);
+        drag_start, dragging, cancelled_dragging, drag_reset : bool;
+        if !kb_interact
+        {
+            drag_start, dragging, cancelled_dragging
+                = DraggingBehavior (view_id, hovered, .Translation_Plane, translation.*);
+        }
+        else if C.keyboard_interaction_flags == 0
+        {
+            drag_start = kb_drag_start;
+            dragging = kb_dragging;
+            cancelled_dragging = kb_drag_cancel;
+            drag_reset = kb_drag_reset;
+        }
 
         if cancelled_dragging
             result = C.drag_start_translation;
 
         if dragging
         {
+            C.active_interaction = .Translation_Plane;
+
             if drag_start
                 C.drag_start_translation = translation.*;
 
@@ -115,7 +140,7 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
             ray_origin, ray_dir := RayFromMouse ();
             intersects, point := RayIntersectsPlane (ray_origin, ray_dir, origin, -camera_forward);
 
-            if drag_start
+            if drag_start || drag_reset
                 C.drag_start_translation_offset = translation.* - point;
 
             if intersects
@@ -141,35 +166,56 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
     for < i : 2..0
     {
         id := axes_ids[i];
-        if ignore_axes[i] || id != C.active_id && array_find (axes_ids, C.active_id)
+        ignore_axis := ignore_axes[i];
+        ignore_axis ||= C.active_id != id && array_find (axes_ids, C.active_id);
+        ignore_axis ||= C.active_id == gizmo_id && C.keyboard_interaction_flags != xx (1 << i);
+
+        if ignore_axis
             continue;
 
         start := translation.* + widget_size * axes_vectors[i] * C.style.translation_view_circle_size;
         end := translation.* + widget_size * axes_vectors[i];
         dim := CalculateDimFactor (translation.*, axes_vectors[i]);
 
-        hovered := dim > 0.1 && IsLineHovered (
-            start, end,
-            C.style.translation_handle_thickness + C.line_interaction_threshold
-        );
+        drag_start, dragging, cancelled_dragging, drag_reset : bool;
+        if !kb_interact
+        {
+            hovered := dim > 0.1 && IsLineHovered (
+                start, end,
+                C.style.translation_handle_thickness + C.line_interaction_threshold
+            );
 
-        drag_start, dragging, cancelled_dragging
-            := DraggingBehavior (id, hovered, .Translation_Axis, translation.*);
+            drag_start, dragging, cancelled_dragging
+                = DraggingBehavior (id, hovered, .Translation_Axis, translation.*);
+        }
+        else if C.keyboard_interaction_flags == xx (1 << i)
+        {
+            drag_start = kb_drag_start;
+            dragging = kb_dragging;
+            cancelled_dragging = kb_drag_cancel;
+            drag_reset = kb_drag_reset;
+        }
 
         if cancelled_dragging
             result = C.drag_start_translation;
 
         if dragging
         {
+            C.active_interaction = .Translation_Axis;
+
             if drag_start
+            {
                 C.drag_start_translation = translation.*;
+            }
 
             origin := C.drag_start_translation;
             ray_origin, ray_dir := RayFromMouse ();
             _, point := NearestPointOnRayAndLine (ray_origin, ray_dir, origin, axes_vectors[i]);
 
-            if drag_start
+            if drag_start || drag_reset
+            {
                 C.drag_start_translation_offset = translation.* - point;
+            }
 
             result = point + C.drag_start_translation_offset;
 
@@ -215,6 +261,10 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
 
     if flags & .No_Translation
         return false;
+
+    gizmo_id := GetID (id);
+    if C.keyboard_focus_id == gizmo_id
+        C.next_keyboard_focus_id = gizmo_id;
 
     PushID (id);
     defer PopID ();
@@ -443,6 +493,10 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
 
     if flags & .No_Rotation
         return false;
+
+    gizmo_id := GetID (id);
+    if C.keyboard_focus_id == gizmo_id
+        C.next_keyboard_focus_id = gizmo_id;
 
     PushID (id);
     defer PopID ();

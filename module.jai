@@ -45,6 +45,21 @@ GizmoInteractionType :: enum
     Rotation_Trackball;
 }
 
+KeyboardInteractionType :: enum
+{
+    None;
+    Translate;
+    Scale;
+    Rotate;
+}
+
+KeyboardInteractionFlags :: enum_flags
+{
+    X_Axis;
+    Y_Axis;
+    Z_Axis;
+}
+
 GizmoContext :: struct
 {
     display_size : Vec2f;
@@ -68,6 +83,11 @@ GizmoContext :: struct
     hovered_id, active_id, next_active_id : u32;
     active_interaction : GizmoInteractionType;
     active_translation : Vec3f;
+
+    keyboard_interaction : KeyboardInteractionType;
+    keyboard_interaction_flags : KeyboardInteractionFlags;
+
+    keyboard_focus_id, next_keyboard_focus_id : u32;
 
     id_stack : [..]u32;
     matrix_stack : [..]Mat4f;
@@ -187,6 +207,8 @@ GizmoFlags :: enum_flags
     No_View_Axis;
     No_Trackball;
 
+    No_Keyboard;
+
     No_Translation;
     No_Scale;
     No_Rotation;
@@ -226,6 +248,13 @@ GetContext :: inline () -> *GizmoContext #must
     return g_gizmo_context;
 }
 
+ClearKeyStates :: inline ()
+{
+    C := GetContext ();
+
+    memset (C.key_states.data, 0, size_of (type_of (C.key_states)));
+}
+
 SetKeyState :: inline (key : Key, state : bool)
 {
     C := GetContext ();
@@ -252,6 +281,19 @@ IsKeyReleased :: inline (key : Key) -> bool #must
     C := GetContext ();
 
     return C.prev_key_states[key] && !C.key_states[key];
+}
+
+SetKeyboardFocus :: inline (id : string)
+{
+    SetKeyboardFocus (GetID (id));
+}
+
+SetKeyboardFocus :: inline (id : u32)
+{
+    C := GetContext ();
+
+    C.keyboard_focus_id = id;
+    C.next_keyboard_focus_id = id;
 }
 
 SetCamera :: (
@@ -283,8 +325,21 @@ NewFrame :: (
     C.active_id = C.next_active_id;
     C.next_active_id = 0;
 
+    C.keyboard_focus_id = C.next_keyboard_focus_id;
+    C.next_keyboard_focus_id = 0;
+
     if C.active_id == 0
+    {
         C.active_interaction = .None;
+        C.keyboard_interaction = .None;
+        C.keyboard_interaction_flags = 0;
+    }
+
+    if C.keyboard_focus_id == 0
+    {
+        C.keyboard_interaction = .None;
+        C.keyboard_interaction_flags = 0;
+    }
 
     C.display_size = display_size;
     C.mouse_pos = mouse_pos;
@@ -313,55 +368,58 @@ EndFrame :: ()
 
     // Draw cursor
     is_behind, active_center := WorldToScreen (C.active_translation);
-    dir := normalize (C.mouse_pos - active_center);
-
-    if C.active_interaction ==
+    if is_behind
     {
-    case .Translation_Axis; #through;
-    case .Translation_Plane;
-        DrawCursorArrow (C.mouse_pos, .{1,0});
-        DrawCursorArrow (C.mouse_pos, .{-1,0});
-        DrawCursorArrow (C.mouse_pos, .{0,1});
-        DrawCursorArrow (C.mouse_pos, .{0,-1});
-        C.wants_to_hide_cursor = true;
+        dir := normalize (C.mouse_pos - active_center);
 
-    case .Scale_Axis; #through;
-    case .Scale_Plane; #through;
-    case .Scale_All;
-        DrawDashedLine2D (
-            active_center, C.mouse_pos,
-            C.style.cursor_line_dash_length,
-            C.style.cursor_line_dash_spacing,
-            C.style.colors[StyleColor.Cursor],
-            C.style.cursor_line_thickness
-        );
+        if C.active_interaction ==
+        {
+        case .Translation_Axis; #through;
+        case .Translation_Plane;
+            DrawCursorArrow (C.mouse_pos, .{1,0});
+            DrawCursorArrow (C.mouse_pos, .{-1,0});
+            DrawCursorArrow (C.mouse_pos, .{0,1});
+            DrawCursorArrow (C.mouse_pos, .{0,-1});
+            C.wants_to_hide_cursor = true;
 
-        DrawCursorArrow (C.mouse_pos, -dir);
-        DrawCursorArrow (C.mouse_pos, dir);
-        C.wants_to_hide_cursor = true;
+        case .Scale_Axis; #through;
+        case .Scale_Plane; #through;
+        case .Scale_All;
+            DrawDashedLine2D (
+                active_center, C.mouse_pos,
+                C.style.cursor_line_dash_length,
+                C.style.cursor_line_dash_spacing,
+                C.style.colors[StyleColor.Cursor],
+                C.style.cursor_line_thickness
+            );
 
-    case .Rotation_Axis;
-        DrawDashedLine2D (
-            active_center, C.mouse_pos,
-            C.style.cursor_line_dash_length,
-            C.style.cursor_line_dash_spacing,
-            C.style.colors[StyleColor.Cursor],
-            C.style.cursor_line_thickness
-        );
+            DrawCursorArrow (C.mouse_pos, -dir);
+            DrawCursorArrow (C.mouse_pos, dir);
+            C.wants_to_hide_cursor = true;
 
-        DrawCursorArrow (C.mouse_pos, PerpendicularCW (dir));
-        DrawCursorArrow (C.mouse_pos, PerpendicularCCW (dir));
-        C.wants_to_hide_cursor = true;
+        case .Rotation_Axis;
+            DrawDashedLine2D (
+                active_center, C.mouse_pos,
+                C.style.cursor_line_dash_length,
+                C.style.cursor_line_dash_spacing,
+                C.style.colors[StyleColor.Cursor],
+                C.style.cursor_line_thickness
+            );
 
-    case .Rotation_Trackball;
-        DrawCursorArrow (C.mouse_pos, .{1,0});
-        DrawCursorArrow (C.mouse_pos, .{-1,0});
-        DrawCursorArrow (C.mouse_pos, .{0,1});
-        DrawCursorArrow (C.mouse_pos, .{0,-1});
-        C.wants_to_hide_cursor = true;
+            DrawCursorArrow (C.mouse_pos, PerpendicularCW (dir));
+            DrawCursorArrow (C.mouse_pos, PerpendicularCCW (dir));
+            C.wants_to_hide_cursor = true;
 
-    case;
-        C.wants_to_hide_cursor = false;
+        case .Rotation_Trackball;
+            DrawCursorArrow (C.mouse_pos, .{1,0});
+            DrawCursorArrow (C.mouse_pos, .{-1,0});
+            DrawCursorArrow (C.mouse_pos, .{0,1});
+            DrawCursorArrow (C.mouse_pos, .{0,-1});
+            C.wants_to_hide_cursor = true;
+
+        case;
+            C.wants_to_hide_cursor = false;
+        }
     }
 }
 
@@ -463,4 +521,88 @@ DraggingBehavior :: (id : u32, hovered : bool, interaction : GizmoInteractionTyp
     }
 
     return started_dragging, C.active_id == id, cancelled_dragging;
+}
+
+KeyboardBehavior :: (id : u32, type : KeyboardInteractionType, translation : Vec3f) -> drag_start : bool, dragging : bool, drag_cancel : bool, drag_reset : bool
+{
+    C := GetContext ();
+
+    if C.keyboard_focus_id != id
+        return false, false, false, false;
+
+    C.next_keyboard_focus_id = id;
+
+    drag_start : bool;
+    if C.keyboard_interaction != type
+    {
+        if type == .Translate && IsKeyPressed (.Translate)
+        {
+            C.keyboard_interaction = .Translate;
+            drag_start = true;
+        }
+
+        if type == .Scale && IsKeyPressed (.Scale)
+        {
+            C.keyboard_interaction = .Scale;
+            drag_start = true;
+        }
+
+        if type == .Rotate && IsKeyPressed (.Rotate)
+        {
+            C.keyboard_interaction = .Rotate;
+            drag_start = true;
+        }
+    }
+
+    drag_cancel : bool;
+    if C.keyboard_interaction == type && !drag_start && IsKeyPressed (.Cancel)
+    {
+        C.keyboard_interaction = .None;
+        drag_cancel = true;
+    }
+
+    drag_reset : bool;
+    if C.keyboard_interaction == type
+    {
+        C.active_id = id;
+        C.next_active_id = id;
+        C.active_translation = translation;
+
+        exclude := IsKeyDown (.Exclude);
+        if IsKeyPressed (.X_Axis)
+        {
+            if exclude
+                C.keyboard_interaction_flags = .Y_Axis | .Z_Axis;
+            else if C.keyboard_interaction_flags == .X_Axis
+                C.keyboard_interaction_flags = 0;
+            else
+                C.keyboard_interaction_flags = .X_Axis;
+
+            drag_reset = true;
+        }
+        else if IsKeyPressed (.Y_Axis)
+        {
+            if exclude
+                C.keyboard_interaction_flags = .X_Axis | .Z_Axis;
+            else if C.keyboard_interaction_flags == .Y_Axis
+                C.keyboard_interaction_flags = 0;
+            else
+                C.keyboard_interaction_flags = .Y_Axis;
+
+            drag_reset = true;
+        }
+        else if IsKeyPressed (.Z_Axis)
+        {
+            if exclude
+                C.keyboard_interaction_flags = .X_Axis | .Y_Axis;
+            else if C.keyboard_interaction_flags == .Z_Axis
+                C.keyboard_interaction_flags = 0;
+            else
+                C.keyboard_interaction_flags = .Z_Axis;
+
+            drag_reset = true;
+        }
+    }
+
+    return drag_start, C.keyboard_interaction == type, drag_cancel, drag_reset;
 }
