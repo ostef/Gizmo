@@ -852,7 +852,8 @@ GizmoTransform :: (
         return GizmoScale (id, scale, flags);
 
     case .None;
-        return false;
+        translation := TranslationVector (GetGizmoMatrix ());
+        DrawOrigin (translation);
     }
 
     return false;
