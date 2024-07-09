@@ -514,15 +514,21 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
     if flags & .No_Rotation
         return false;
 
+    matrix := GetGizmoMatrix ();
+    translation := TranslationVector (matrix);
+
     gizmo_id := GetID (id);
-    if C.keyboard_focus_id == gizmo_id
-        C.next_keyboard_focus_id = gizmo_id;
+    kb_drag_start, kb_dragging, kb_drag_cancel, kb_drag_reset
+        := KeyboardBehavior (gizmo_id, .Rotate, translation);
+    kb_interact := kb_dragging || kb_drag_cancel;
+
+    if kb_drag_start
+        C.drag_start_rotation = rotation.*;
+    if kb_drag_reset
+        rotation.* = C.drag_start_rotation;
 
     PushID (id);
     defer PopID ();
-
-    matrix := GetGizmoMatrix ();
-    translation := TranslationVector (matrix);
 
     camera_forward := ForwardVector (C.camera_transform);
     camera_right := RightVector (C.camera_transform);
@@ -571,13 +577,21 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
         flags & .No_View_Axis != 0,
     ];
 
-    if !array_find (axes_ids, C.active_id)
+    if C.active_id != gizmo_id && !array_find (axes_ids, C.active_id)
         DrawOrigin (translation);
 
     for < i : 3..0
     {
+        keyboard_flags : KeyboardInteractionFlags;
+        if i != 3
+            keyboard_flags = xx (1 << i);
+
         id := axes_ids[i];
-        if ignore_axes[i] || id != C.active_id && array_find (axes_ids, C.active_id)
+        ignore_axis := ignore_axes[i];
+        ignore_axis ||= C.active_id == gizmo_id && C.keyboard_interaction_flags != keyboard_flags;
+        ignore_axis ||= C.active_id != id && array_find (axes_ids, C.active_id);
+
+        if ignore_axis
             continue;
 
         axis := axes_vectors[i];
@@ -596,22 +610,33 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
             radius = widget_size;
         }
 
-        hovered := IsFacingCircleHovered (
-            translation,
-            radius,
-            C.style.rotation_handle_thickness + ifx i == 3 then C.line_interaction_threshold,
-            tangent, bitangent
-        );
+        drag_start, dragging, cancelled_dragging, drag_reset : bool;
+        if !kb_interact
+        {
+            hovered := IsFacingCircleHovered (
+                translation,
+                radius,
+                C.style.rotation_handle_thickness + ifx i == 3 then C.line_interaction_threshold,
+                tangent, bitangent
+            );
 
-        drag_start, dragging, cancelled_dragging
-            := DraggingBehavior (id, hovered, .Rotation_Axis, translation);
+            drag_start, dragging, cancelled_dragging
+                = DraggingBehavior (id, hovered, .Rotation_Axis, translation);
+        }
+        else if C.keyboard_interaction_flags == keyboard_flags
+        {
+            drag_start = kb_drag_start;
+            dragging = kb_dragging;
+            cancelled_dragging = kb_drag_cancel;
+            drag_reset = kb_drag_reset;
+        }
 
         if cancelled_dragging
             result = C.drag_start_rotation;
 
         if dragging
         {
-            if drag_start
+            if drag_start || drag_reset
             {
                 C.drag_start_rotation_axis = axes_vectors[i];
                 C.drag_start_rotation = rotation.*;
@@ -620,7 +645,7 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
             origin := translation;
             ray_origin, ray_dir := RayFromMouse ();
             intersects, point := RayIntersectsPlane (ray_origin, ray_dir, origin, C.drag_start_rotation_axis);
-            if drag_start
+            if drag_start || drag_reset
             {
                 C.drag_start_rotation_point = point;
             }
@@ -686,7 +711,11 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
         }
     }
 
-    if !(flags & .No_Trackball)
+    ignore_trackball := (flags & .No_Trackball) != 0;
+    ignore_trackball ||= C.active_id == gizmo_id;
+    ignore_trackball ||= C.active_id != trackball_id && array_find (axes_ids, C.active_id);
+
+    if !ignore_trackball
     {
         hovered := IsCircleFilledHovered (translation, camera_forward, widget_size);
         drag_start, dragging, cancelled_dragging
