@@ -398,7 +398,7 @@ IsCircleFilledHovered :: (center : Vec3f, normal : Vec3f, radius : float) -> boo
     return false;
 }
 
-IsFacingCircleHovered :: (center : Vec3f, radius : float, thickness : float, tangent : Vec3f, bitangent : Vec3f, epsilon := 0.02, resolution := 200) -> bool #must
+IsFacingCircleHovered :: (center : Vec3f, radius : float, thickness : float, tangent : Vec3f, bitangent : Vec3f, epsilon := 0.01, resolution := 200) -> bool #must
 {
     C := GetContext ();
 
@@ -420,11 +420,14 @@ IsFacingCircleHovered :: (center : Vec3f, radius : float, thickness : float, tan
 
         p2 := p;
 
-        start := center + (tangent * p1.x + bitangent * p1.y) * radius;
-        end := center + (tangent * p2.x + bitangent * p2.y) * radius;
+        start := tangent * p1.x + bitangent * p1.y;
+        end := tangent * p2.x + bitangent * p2.y;
 
-        if dot (start - center, view_dir) > epsilon || dot (end - center, view_dir) > epsilon
+        if dot (start, view_dir) > epsilon || dot (end, view_dir) > epsilon
             continue;
+
+        start = center + start * radius;
+        end = center + end * radius;
 
         if IsLineHovered (start, end, thickness)
             return true;

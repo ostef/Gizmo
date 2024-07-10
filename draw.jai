@@ -267,7 +267,7 @@ DrawCircle :: (center : Vec3f, radius : float, color : Vec4f, thickness : float,
     }
 }
 
-DrawFacingCircle :: (center : Vec3f, radius : float, color : Vec4f, thickness : float, tangent : Vec3f, bitangent : Vec3f, epsilon := 0.02, resolution := 200)
+DrawFacingCircle :: (center : Vec3f, radius : float, color : Vec4f, thickness : float, tangent : Vec3f, bitangent : Vec3f, epsilon := 0.01, resolution := 200)
 {
     C := GetContext ();
 
@@ -292,11 +292,14 @@ DrawFacingCircle :: (center : Vec3f, radius : float, color : Vec4f, thickness : 
 
         p2 := p;
 
-        start := center + (tangent * p1.x + bitangent * p1.y) * radius;
-        end := center + (tangent * p2.x + bitangent * p2.y) * radius;
+        start := tangent * p1.x + bitangent * p1.y;
+        end := tangent * p2.x + bitangent * p2.y;
 
-        if dot (start - center, view_dir) > epsilon || dot (end - center, view_dir) > epsilon
+        if dot (start, view_dir) > epsilon || dot (end, view_dir) > epsilon
             continue;
+
+        start = center + start * radius;
+        end = center + end * radius;
 
         DrawLine (start, end, color, thickness);
     }
