@@ -525,23 +525,22 @@ DraggingBehavior :: (id : u32, hovered : bool, interaction : GizmoInteractionTyp
     return started_dragging, C.active_id == id, cancelled_dragging;
 }
 
-KeyboardBehavior :: (id : u32, type : KeyboardInteractionType, translation : Vec3f) -> drag_start : bool, dragging : bool, drag_cancel : bool, drag_reset : bool
+KeyboardBehavior :: (id : u32, type : KeyboardInteractionType, translation : Vec3f) -> drag_start : bool, dragging : bool, drag_cancel : bool
 {
     C := GetContext ();
 
     if C.keyboard_focus_id != id
-        return false, false, false, false;
+        return false, false, false;
 
     C.next_keyboard_focus_id = id;
 
     if C.active_id != 0 && C.active_id != id
-        return false, false, false, false;
+        return false, false, false;
 
     if C.keyboard_interaction == type && IsKeyPressed (.Submit)
     {
-        C.keyboard_interaction = .None;
-        C.keyboard_interaction_flags = 0;
-        return false, false, false, false;
+        C.next_active_id = 0;
+        return false, false, false;
     }
 
     drag_start : bool;
@@ -572,11 +571,11 @@ KeyboardBehavior :: (id : u32, type : KeyboardInteractionType, translation : Vec
     drag_cancel : bool;
     if C.keyboard_interaction == type && !drag_start && IsKeyPressed (.Cancel)
     {
-        C.keyboard_interaction = .None;
+        C.next_active_id = 0;
         drag_cancel = true;
+        return false, false, true;
     }
 
-    drag_reset : bool;
     if C.keyboard_interaction == type
     {
         C.active_id = id;
@@ -593,7 +592,8 @@ KeyboardBehavior :: (id : u32, type : KeyboardInteractionType, translation : Vec
             else
                 C.keyboard_interaction_flags = .X_Axis;
 
-            drag_reset = true;
+            drag_start = true;
+            drag_cancel = true;
         }
         else if IsKeyPressed (.Y_Axis)
         {
@@ -604,7 +604,8 @@ KeyboardBehavior :: (id : u32, type : KeyboardInteractionType, translation : Vec
             else
                 C.keyboard_interaction_flags = .Y_Axis;
 
-            drag_reset = true;
+            drag_start = true;
+            drag_cancel = true;
         }
         else if IsKeyPressed (.Z_Axis)
         {
@@ -615,9 +616,10 @@ KeyboardBehavior :: (id : u32, type : KeyboardInteractionType, translation : Vec
             else
                 C.keyboard_interaction_flags = .Z_Axis;
 
-            drag_reset = true;
+            drag_start = true;
+            drag_cancel = true;
         }
     }
 
-    return drag_start, C.keyboard_interaction == type, drag_cancel, drag_reset;
+    return drag_start, C.keyboard_interaction == type, drag_cancel;
 }
