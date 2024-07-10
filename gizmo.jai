@@ -103,15 +103,15 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
 
     if !ignore_view
     {
-        hovered := IsCircleFilledHovered (
-            translation.*,
-            -camera_forward,
-            widget_size * C.style.translation_view_circle_size
-        );
-
         drag_start, dragging, cancelled_dragging, drag_reset : bool;
         if !kb_interact
         {
+            hovered := IsCircleFilledHovered (
+                translation.*,
+                -camera_forward,
+                widget_size * C.style.translation_view_circle_size
+            );
+
             drag_start, dragging, cancelled_dragging
                 = DraggingBehavior (view_id, hovered, .Translation_Plane, translation.*);
         }
@@ -252,7 +252,7 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
 {
     C := GetContext ();
 
-    if flags & .No_Translation
+    if flags & .No_Scale
         return false;
 
     model_matrix := GetGizmoMatrix ();
