@@ -145,18 +145,19 @@ Style :: struct
 {
     global_size := 1.0;
 
-    translation_handle_thickness := 2.0;
-    translation_arrow_size := 16.0;
+    translation_handle_thickness := 3.0;
+    translation_arrow_size := 20.0;
     translation_arrow_aspect_ratio := 0.5;
     translation_view_circle_size := 0.2;
-    translation_view_circle_thickness := 2.8;
-    scale_handle_thickness := 2.0;
-    scale_tip_size := 9.0;
+    translation_view_circle_thickness := 3.5;
+    scale_handle_thickness := 3.5;
+    scale_tip_size := 10.0;
     scale_all_inner_circle_size := 0.2;
     scale_all_outer_circle_size := 1.23;
-    scale_all_handle_thickness := 2.8;
-    rotation_handle_thickness := 2.8;
+    scale_all_handle_thickness := 3.5;
+    rotation_handle_thickness := 4.5;
     rotation_view_axis_size := 1.23;
+    rotation_view_axis_thickness := 3.5;
     guide_line_thickness := 1.0;
     cursor_line_thickness := 1.5;
     cursor_line_dash_length := 4.0;

@@ -589,17 +589,20 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
         axis := axes_vectors[i];
         tangent, bitangent : Vec3f;
         radius : float;
+        thickness : float;
         if i == 3
         {
             tangent = RightVector (C.camera_transform);
             bitangent = UpVector (C.camera_transform);
             radius = widget_size * C.style.rotation_view_axis_size;
+            thickness = C.style.rotation_view_axis_thickness;
         }
         else
         {
             tangent = axes_vectors[(i + 1) % 3];
             bitangent = axes_vectors[(i + 2) % 3];
             radius = widget_size;
+            thickness = C.style.rotation_handle_thickness;
         }
 
         drag_start, dragging, cancelled_dragging : bool;
@@ -608,7 +611,7 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
             hovered := IsFacingCircleHovered (
                 translation,
                 radius,
-                C.style.rotation_handle_thickness + ifx i == 3 then C.line_interaction_threshold,
+                thickness + ifx i == 3 then C.line_interaction_threshold,
                 tangent, bitangent
             );
 
@@ -672,7 +675,7 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
                     translation,
                     translation + end * radius,
                     axes_active_colors[i],
-                    C.style.rotation_handle_thickness
+                    thickness
                 );
             }
         }
@@ -686,7 +689,7 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
                 translation,
                 radius,
                 color,
-                C.style.rotation_handle_thickness,
+                thickness,
                 tangent, bitangent
             );
         }
@@ -696,7 +699,7 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
                 translation,
                 radius,
                 color,
-                C.style.rotation_handle_thickness,
+                thickness,
                 tangent, bitangent
             );
         }
