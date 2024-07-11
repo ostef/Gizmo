@@ -25,18 +25,21 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
     if flags & .No_Translation
         return false;
 
-    result := translation.*;
-    defer translation.* = result;
-
+    modified := false;
     gizmo_id := GetID (id);
     kb_drag_start, kb_dragging, kb_drag_cancel
         := KeyboardBehavior (gizmo_id, .Translate, translation.*);
     kb_interact := kb_dragging || kb_drag_cancel;
 
     if kb_drag_cancel
-        result = C.drag_start_translation;
+        translation.* = C.drag_start_translation;
     if kb_drag_start
-        C.drag_start_translation = result;
+        C.drag_start_translation = translation.*;
+
+    modified ||= kb_interact;
+
+    result := translation.*;
+    defer translation.* = result;
 
     PushID (id);
     defer PopID ();
@@ -122,6 +125,8 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
             cancelled_dragging = kb_drag_cancel;
         }
 
+        modified ||= dragging || cancelled_dragging;
+
         if cancelled_dragging
             result = C.drag_start_translation;
 
@@ -189,6 +194,8 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
             cancelled_dragging = kb_drag_cancel;
         }
 
+        modified ||= dragging || cancelled_dragging;
+
         if cancelled_dragging
             result = C.drag_start_translation;
 
@@ -239,7 +246,7 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
         );
     }
 
-    return translation.* != result;
+    return modified;
 }
 
 GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
@@ -253,18 +260,22 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
     translation := TranslationVector (model_matrix);
     model_matrix = RotationMatrix (model_matrix);
 
-    result := scale.*;
-    defer scale.* = result;
-
+    modified := false;
     gizmo_id := GetID (id);
     kb_drag_start, kb_dragging, kb_drag_cancel
         := KeyboardBehavior (gizmo_id, .Scale, translation);
     kb_interact := kb_dragging || kb_drag_cancel;
 
     if kb_drag_cancel
-        result = C.drag_start_scale;
+        scale.* = C.drag_start_scale;
     if kb_drag_start
-        C.drag_start_scale = result;
+        C.drag_start_scale = scale.*;
+
+    modified ||= kb_interact;
+
+    result := scale.*;
+    defer scale.* = result;
+
 
     PushID (id);
     defer PopID ();
@@ -346,6 +357,8 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
             dragging = kb_dragging;
             cancelled_dragging = kb_drag_cancel;
         }
+
+        modified ||= dragging || cancelled_dragging;
 
         if cancelled_dragging
             result = C.drag_start_scale;
@@ -435,6 +448,8 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
             cancelled_dragging = kb_drag_cancel;
         }
 
+        modified ||= dragging || cancelled_dragging;
+
         if cancelled_dragging
             result = C.drag_start_scale;
 
@@ -496,7 +511,7 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
         }
     }
 
-    return scale.* != result;
+    return modified;
 }
 
 GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> bool
@@ -509,18 +524,21 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
     matrix := GetGizmoMatrix ();
     translation := TranslationVector (matrix);
 
-    result := rotation.*;
-    defer rotation.* = result;
-
+    modified := false;
     gizmo_id := GetID (id);
     kb_drag_start, kb_dragging, kb_drag_cancel
         := KeyboardBehavior (gizmo_id, .Rotate, translation);
     kb_interact := kb_dragging || kb_drag_cancel;
 
     if kb_drag_cancel
-        result = C.drag_start_rotation;
+        rotation.* = C.drag_start_rotation;
     if kb_drag_start
-        C.drag_start_rotation = result;
+        C.drag_start_rotation = rotation.*;
+
+    modified ||= kb_interact;
+
+    result := rotation.*;
+    defer rotation.* = result;
 
     PushID (id);
     defer PopID ();
@@ -625,6 +643,8 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
             cancelled_dragging = kb_drag_cancel;
         }
 
+        modified ||= dragging || cancelled_dragging;
+
         if cancelled_dragging
             result = C.drag_start_rotation;
 
@@ -715,6 +735,8 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
         drag_start, dragging, cancelled_dragging
             := DraggingBehavior (trackball_id, hovered, .Rotation_Trackball, translation);
 
+        modified ||= dragging || cancelled_dragging;
+
         if cancelled_dragging
             result = C.drag_start_rotation;
 
@@ -776,7 +798,7 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
         }
     }
 
-    return rotation.* != result;
+    return modified;
 }
 
 GizmoTransform :: (
