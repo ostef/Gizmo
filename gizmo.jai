@@ -146,6 +146,18 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
                 if drag_start
                     C.drag_start_translation_offset = translation.* - point;
 
+                proj_point : Vec2f;
+                _, proj_point.x = ProjectPointOnInfiniteLine (point, origin, origin + camera_right);
+                _, proj_point.y = ProjectPointOnInfiniteLine (point, origin, origin + camera_up);
+
+                if IsKeyDown (.Snap)
+                {
+                    proj_point.x = Snap (proj_point.x, C.style.translation_snap_grid_size);
+                    proj_point.y = Snap (proj_point.y, C.style.translation_snap_grid_size);
+                }
+
+                point = origin + proj_point.x * camera_right + proj_point.y * camera_up;
+
                 result = point + C.drag_start_translation_offset;
             }
 
@@ -223,13 +235,17 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
                 mouse_offset := C.mouse_pos - C.mouse_drag_start;
                 proj_axis = normalize (proj_axis - proj_center);
                 mouse_dir := normalize (C.mouse_pos - C.mouse_drag_start);
-                factor := dot (proj_axis, mouse_dir);
                 dist := distance (C.mouse_drag_start, C.mouse_pos);
+                dist *= dot (proj_axis, mouse_dir);
                 dist *= C.style.translation_drag_sensitivity;
+
                 if IsKeyDown (.Slow)
                     dist *= C.style.sensitivity_slow_factor;
 
-                result = C.drag_start_translation + axes_vectors[i] * factor * dist;
+                if IsKeyDown (.Snap)
+                    dist = Snap (dist, C.style.translation_snap_grid_size);
+
+                result = C.drag_start_translation + axes_vectors[i] * dist;
 
                 DrawText (
                     tprint ("X: % Y: % Z: %", result.x, result.y, result.z),
@@ -413,7 +429,12 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
                     s = -s;
 
                 ratio := t2 / t1;
-                result.component[i] = s * abs (C.drag_start_scale.component[i]) * ratio;
+                additional_scale := s * abs (C.drag_start_scale.component[i]) * ratio - C.drag_start_scale.component[i];
+
+                if IsKeyDown (.Snap)
+                    additional_scale = Snap (additional_scale, C.style.scale_snap_grid_size);
+
+                result.component[i] = C.drag_start_scale.component[i] + additional_scale;
 
                 end = translation + widget_size * C.drag_start_scale_axis * s * ratio;
 
@@ -516,9 +537,26 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
                 if dot (center_to_start, center_to_curr) < 0
                     s = -s;
 
-                result = abs (C.drag_start_scale) * abs (t2 / t1);
-                result = result * s;
                 widget_size *= t2 / t1;
+
+                ratio := t2 / t1;
+                additional_scale := s * abs (C.drag_start_scale) * ratio - C.drag_start_scale;
+
+                if IsKeyDown (.Snap)
+                {
+                    additional_scale.x = Snap (additional_scale.x, C.style.scale_snap_grid_size);
+                    additional_scale.y = Snap (additional_scale.y, C.style.scale_snap_grid_size);
+                    additional_scale.z = Snap (additional_scale.z, C.style.scale_snap_grid_size);
+                }
+
+                result = C.drag_start_scale + additional_scale;
+
+                if IsKeyDown (.Snap)
+                {
+                    result.x = Snap (result.x, C.style.scale_snap_grid_size);
+                    result.y = Snap (result.y, C.style.scale_snap_grid_size);
+                    result.z = Snap (result.z, C.style.scale_snap_grid_size);
+                }
 
                 DrawText (
                     tprint ("X: % Y: % Z: %", result.x, result.y, result.z),
@@ -718,6 +756,9 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
 
                 if IsKeyDown (.Slow)
                     angle *= C.style.sensitivity_slow_factor;
+
+                if IsKeyDown (.Snap)
+                    angle = Snap (angle, C.style.rotation_snap_grid_size);
 
                 rotated : Quatf;
                 set_from_axis_and_angle (*rotated, C.drag_start_rotation_axis, angle);

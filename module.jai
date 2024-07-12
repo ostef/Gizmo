@@ -29,6 +29,7 @@ Key :: enum
     Scale;
 
     Slow;
+    Snap;
 
     Interact;
     Submit;
@@ -153,6 +154,7 @@ Style :: struct
     line_interaction_threshold := 7.0;
     sensitivity_slow_factor := 0.1;
 
+    translation_snap_grid_size := 1.0;
     translation_drag_sensitivity := 0.05;
     translation_handle_thickness := 3.0;
     translation_arrow_size := 20.0;
@@ -160,18 +162,25 @@ Style :: struct
     translation_view_circle_size := 0.2;
     translation_view_circle_thickness := 3.5;
     scale_handle_thickness := 3.5;
+
+    scale_snap_grid_size := 0.1;
     scale_tip_size := 10.0;
     scale_all_inner_circle_size := 0.2;
     scale_all_outer_circle_size := 1.23;
     scale_all_handle_thickness := 3.5;
+
+    rotation_snap_grid_size := 5.0 * PI / 180.0;
     rotation_handle_thickness := 4.5;
     rotation_view_axis_size := 1.23;
     rotation_view_axis_thickness := 3.5;
+
     guide_line_thickness := 1.0;
+
     cursor_line_thickness := 1.5;
     cursor_line_dash_length := 4.0;
     cursor_line_dash_spacing := 3.0;
     cursor_indicator_size := 17.0;
+
     origin_circle_size := 0.065;
 
     colors : [StyleColor.Count]Vec4f = ---;

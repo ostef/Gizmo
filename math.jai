@@ -30,6 +30,16 @@ Sign :: inline (val : $T) -> T #must
     return 0;
 }
 
+Round :: inline (value : float) -> float #must
+{
+    return cast (float) (cast (int) (value + Sign (value) * 0.5));
+}
+
+Snap :: inline (value : float, grid_size : float) -> float #must
+{
+    return Round (value / grid_size) * grid_size;
+}
+
 ApproxZero :: inline (val : float, epsilon : float) -> bool #must
 {
     return abs (val) <= epsilon;
