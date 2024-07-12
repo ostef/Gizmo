@@ -80,8 +80,6 @@ GizmoContext :: struct
 
     wants_to_hide_cursor : bool;
 
-    line_interaction_threshold := 7.0;
-
     hovered_id, active_id, next_active_id : u32;
     active_interaction : GizmoInteractionType;
     active_translation : Vec3f;
@@ -145,6 +143,9 @@ Style :: struct
 {
     global_size := 1.0;
 
+    line_interaction_threshold := 7.0;
+
+    translation_drag_sensitivity := 0.05;
     translation_handle_thickness := 3.0;
     translation_arrow_size := 20.0;
     translation_arrow_aspect_ratio := 0.5;

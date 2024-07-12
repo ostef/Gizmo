@@ -182,7 +182,7 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
         {
             hovered := dim > 0.1 && IsLineHovered (
                 start, end,
-                C.style.translation_handle_thickness + C.line_interaction_threshold
+                C.style.translation_handle_thickness + C.style.line_interaction_threshold
             );
 
             drag_start, dragging, cancelled_dragging
@@ -216,7 +216,7 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
                 mouse_dir := normalize (C.mouse_pos - C.mouse_drag_start);
                 factor := dot (proj_axis, mouse_dir);
                 dist := distance (C.mouse_drag_start, C.mouse_pos);
-                dist *= 0.05;
+                dist *= C.style.translation_drag_sensitivity;
 
                 result = C.drag_start_translation + axes_vectors[i] * factor * dist;
             }
@@ -350,7 +350,7 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
         {
             hovered := dim > 0.1 && IsLineHovered (
                 start, end,
-                C.style.scale_handle_thickness + C.line_interaction_threshold
+                C.style.scale_handle_thickness + C.style.line_interaction_threshold
             );
 
             drag_start, dragging, cancelled_dragging
@@ -634,7 +634,7 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
             hovered := IsFacingCircleHovered (
                 translation,
                 radius,
-                thickness + ifx i == 3 then C.line_interaction_threshold,
+                thickness + ifx i == 3 then C.style.line_interaction_threshold,
                 tangent, bitangent
             );
 
