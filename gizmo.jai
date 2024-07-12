@@ -218,8 +218,7 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
                 dist := distance (C.mouse_drag_start, C.mouse_pos);
                 dist *= 0.05;
 
-                result = C.drag_start_translation;
-                result.component[i] += factor * dist;
+                result = C.drag_start_translation + axes_vectors[i] * factor * dist;
             }
         }
 
