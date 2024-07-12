@@ -85,6 +85,24 @@ RotationMatrix :: inline (mat : Mat4f) -> Mat4f #must
     );
 }
 
+Angle :: inline (a : Vec2f, b : Vec2f) -> float #must
+{
+    denom := sqrt (dot (a, a) * dot (b, b));
+    if ApproxZero (denom, 0.0001)
+        return 0;
+
+    d := clamp (dot (a, b) / denom, -1, 1);
+
+    return acos (d);
+}
+
+SignedAngle :: inline (a : Vec2f, b : Vec2f) -> float #must
+{
+    s := Sign (a.x * b.y - a.y * b.y);
+
+    return Angle (a, b) * s;
+}
+
 Angle :: inline (a : Vec3f, b : Vec3f) -> float #must
 {
     denom := sqrt (dot (a, a) * dot (b, b));

@@ -669,11 +669,13 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
                 C.drag_start_rotation_point = point;
             }
 
-            if intersects
+            is_behind, proj_center := WorldToScreen (translation);
+            if !is_behind
             {
-                begin := normalize (C.drag_start_rotation_point - translation);
-                end   := normalize (point - translation);
-                angle := SignedAngle (begin, end, C.drag_start_rotation_axis);
+                begin := normalize (proj_center - C.mouse_drag_start);
+                end := normalize (proj_center - C.mouse_pos);
+                s := ifx dot (camera_forward, axis) < 0 then -1.0 else 1.0;
+                angle := SignedAngle (Vec3f.{xy=begin,z=0}, Vec3f.{xy=end,z=0}, .{0,0,-s});
 
                 rotated : Quatf;
                 set_from_axis_and_angle (*rotated, C.drag_start_rotation_axis, angle);
@@ -681,24 +683,25 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
                 result = rotated * C.drag_start_rotation;
                 normalize_or_identity (*result);
 
+                rotation_start_dir := normalize (C.drag_start_rotation_point - translation);
                 DrawSemiCircleFilled (
                     translation,
                     radius,
                     axes_guide_colors[i] * .{1,1,1,0.3},
                     tangent, bitangent,
-                    SignedAngle (tangent, begin, C.drag_start_rotation_axis), -angle
+                    SignedAngle (tangent, rotation_start_dir, C.drag_start_rotation_axis), -angle
                 );
 
                 DrawLine (
                     translation,
-                    translation + begin * radius,
+                    translation + rotation_start_dir * radius,
                     axes_active_colors[i],
                     C.style.guide_line_thickness
                 );
 
                 DrawLine (
                     translation,
-                    translation + end * radius,
+                    translation + rotate (rotation_start_dir, rotated) * radius,
                     axes_active_colors[i],
                     thickness
                 );
