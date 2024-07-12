@@ -141,11 +141,12 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
             ray_origin, ray_dir := RayFromMouse ();
             intersects, point := RayIntersectsPlane (ray_origin, ray_dir, origin, -camera_forward);
 
-            if drag_start
-                C.drag_start_translation_offset = translation.* - point;
-
             if intersects
+            {
+                if drag_start
+                    C.drag_start_translation_offset = translation.* - point;
                 result = point + C.drag_start_translation_offset;
+            }
         }
 
         color := ifx C.hovered_id == view_id || C.active_id == view_id
@@ -206,14 +207,20 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
             if drag_start
                 C.drag_start_translation = translation.*;
 
-            origin := C.drag_start_translation;
-            ray_origin, ray_dir := RayFromMouse ();
-            _, point := NearestPointOnRayAndLine (ray_origin, ray_dir, origin, axes_vectors[i]);
+            center_behind, proj_center := WorldToScreen (C.drag_start_translation);
+            axis_behind, proj_axis := WorldToScreen (C.drag_start_translation + axes_vectors[i]);
+            if !center_behind && !axis_behind
+            {
+                mouse_offset := C.mouse_pos - C.mouse_drag_start;
+                proj_axis = normalize (proj_axis - proj_center);
+                mouse_dir := normalize (C.mouse_pos - C.mouse_drag_start);
+                factor := dot (proj_axis, mouse_dir);
+                dist := distance (C.mouse_drag_start, C.mouse_pos);
+                dist *= 0.05;
 
-            if drag_start
-                C.drag_start_translation_offset = translation.* - point;
-
-            result = point + C.drag_start_translation_offset;
+                result = C.drag_start_translation;
+                result.component[i] += factor * dist;
+            }
         }
 
         color := ifx C.hovered_id == id || C.active_id == id
@@ -275,7 +282,6 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
 
     result := scale.*;
     defer scale.* = result;
-
 
     PushID (id);
     defer PopID ();
