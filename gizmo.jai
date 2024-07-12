@@ -145,6 +145,7 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
             {
                 if drag_start
                     C.drag_start_translation_offset = translation.* - point;
+
                 result = point + C.drag_start_translation_offset;
             }
 
@@ -225,6 +226,8 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
                 factor := dot (proj_axis, mouse_dir);
                 dist := distance (C.mouse_drag_start, C.mouse_pos);
                 dist *= C.style.translation_drag_sensitivity;
+                if IsKeyDown (.Slow)
+                    dist *= C.style.sensitivity_slow_factor;
 
                 result = C.drag_start_translation + axes_vectors[i] * factor * dist;
 
@@ -399,6 +402,9 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
                 t1 := distance (proj_center, C.mouse_drag_start);
                 t2 := distance (proj_center, C.mouse_pos);
 
+                if IsKeyDown (.Slow)
+                    t2 = t1 + (t2 - t1) * C.style.sensitivity_slow_factor;
+
                 s := Sign (C.drag_start_scale.component[i]);
                 center_to_start := normalize (C.mouse_drag_start - proj_center);
                 center_to_curr := normalize (C.mouse_pos - proj_center);
@@ -494,6 +500,9 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
             {
                 t1 := distance (proj_center, C.mouse_drag_start);
                 t2 := distance (proj_center, C.mouse_pos);
+
+                if IsKeyDown (.Slow)
+                    t2 = t1 + (t2 - t1) * C.style.sensitivity_slow_factor;
 
                 s := Vec3f.{
                     Sign (C.drag_start_scale.x),
@@ -706,6 +715,9 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
                 end := normalize (proj_center - C.mouse_pos);
                 s := ifx dot (camera_forward, axis) < 0 then -1.0 else 1.0;
                 angle := SignedAngle (Vec3f.{xy=begin,z=0}, Vec3f.{xy=end,z=0}, .{0,0,-s});
+
+                if IsKeyDown (.Slow)
+                    angle *= C.style.sensitivity_slow_factor;
 
                 rotated : Quatf;
                 set_from_axis_and_angle (*rotated, C.drag_start_rotation_axis, angle);

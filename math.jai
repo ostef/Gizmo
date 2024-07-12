@@ -291,14 +291,13 @@ ProjectPointOnInfiniteLine :: (point : Vec3f, start : Vec3f, end : Vec3f) -> Vec
     return start + t * dir, t;
 }
 
-RayFromMouse :: () -> origin : Vec3f #must, direction : Vec3f #must
+RayFromScreenPoint :: (point : Vec2f) -> origin : Vec3f #must, direction : Vec3f #must
 {
     C := GetContext ();
 
-    mouse_pos := C.mouse_pos;
-    mouse_pos = (C.ortho_projection * Vec4f.{mouse_pos.x, mouse_pos.y, 0, 1}).xy;
+    ndc := (C.ortho_projection * Vec4f.{point.x, point.y, 0, 1}).xy;
 
-    view_space := C.inv_persp_projection * Vec4f.{xy=mouse_pos,z=0,w=1};
+    view_space := C.inv_persp_projection * Vec4f.{xy=ndc,z=0,w=1};
     view_space.z = 1;
     view_space.w = 0;
 
@@ -306,6 +305,14 @@ RayFromMouse :: () -> origin : Vec3f #must, direction : Vec3f #must
     dir := normalize ((C.camera_transform * view_space).xyz);
 
     return pos, dir;
+}
+
+RayFromMouse :: inline () -> origin : Vec3f #must, direction : Vec3f #must
+{
+    C := GetContext ();
+    origin, dir := RayFromScreenPoint (C.mouse_pos);
+
+    return origin, dir;
 }
 
 NearestPointOnRayAndLine :: (ray_origin : Vec3f, ray_dir : Vec3f, line_origin : Vec3f, line_dir : Vec3f) -> point_on_ray : Vec3f, point_on_line : Vec3f, line_dist : float, ray_dist : float

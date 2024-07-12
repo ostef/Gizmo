@@ -28,6 +28,8 @@ Key :: enum
     Rotate;
     Scale;
 
+    Slow;
+
     Interact;
     Submit;
     Cancel;
@@ -149,6 +151,7 @@ Style :: struct
     global_size := 1.0;
 
     line_interaction_threshold := 7.0;
+    sensitivity_slow_factor := 0.1;
 
     translation_drag_sensitivity := 0.05;
     translation_handle_thickness := 3.0;
