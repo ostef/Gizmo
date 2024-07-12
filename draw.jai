@@ -1,5 +1,12 @@
 // @Todo: use indices to reduce memory usage
 
+TextToDraw :: struct
+{
+    start, count : int;
+    position : Vec2f;
+    color : Vec4f;
+}
+
 DrawVertex :: struct
 {
     position : Vec3f;
@@ -303,4 +310,26 @@ DrawFacingCircle :: (center : Vec3f, radius : float, color : Vec4f, thickness : 
 
         DrawLine (start, end, color, thickness);
     }
+}
+
+DrawText :: (text : string, position : Vec2f, color : Vec4f, shadow_color : Vec4f)
+{
+    C := GetContext ();
+
+    if shadow_color.w > 0
+    {
+        shadow := array_add (*C.texts_to_draw);
+        shadow.start = C.text_buffer.count;
+        shadow.count = text.count;
+        shadow.position = position + .{2,2};
+        shadow.color = shadow_color;
+    }
+
+    to_draw := array_add (*C.texts_to_draw);
+    to_draw.start = C.text_buffer.count;
+    to_draw.count = text.count;
+    to_draw.position = position;
+    to_draw.color = color;
+
+    array_add (*C.text_buffer, ..(cast ([]u8) text));
 }

@@ -106,6 +106,9 @@ GizmoContext :: struct
     drag_start_rotation_point : Vec3f;
 
     draw_vertices : [..]DrawVertex;
+    text_buffer : [..]u8;
+    texts_to_draw : [..]TextToDraw;
+
     renderer : *void;
 
     style : Style;
@@ -133,6 +136,8 @@ StyleColor :: enum
     Z_Axis_Guide;
     View_Axis_Guide;
 
+    Text;
+    Text_Shadow;
     Ghost_Gizmo;
     Cursor;
 
@@ -191,6 +196,8 @@ InitDefaultColors :: (using style : *Style)
     colors[StyleColor.Z_Axis_Guide] = .{0.217,0.317,1,1};
     colors[StyleColor.View_Axis_Guide] = .{1,1,1,1};
 
+    colors[StyleColor.Text] = .{1,1,1,1};
+    colors[StyleColor.Text_Shadow] = .{0,0,0,0.6};
     colors[StyleColor.Ghost_Gizmo] = .{0.5,0.5,0.5,1};
     colors[StyleColor.Cursor] = .{0.117,0.117,0.117,1};
 }
@@ -237,6 +244,8 @@ DestroyContext :: ()
     array_reset (*g_gizmo_context.id_stack);
     array_reset (*g_gizmo_context.matrix_stack);
     array_reset (*g_gizmo_context.draw_vertices);
+    array_reset (*g_gizmo_context.text_buffer);
+    array_reset (*g_gizmo_context.texts_to_draw);
     g_gizmo_context = null;
 }
 
@@ -347,6 +356,9 @@ NewFrame :: (
 
     C.display_size = display_size;
     C.mouse_pos = mouse_pos;
+
+    C.text_buffer.count = 0;
+    C.texts_to_draw.count = 0;
 }
 
 EndFrame :: ()

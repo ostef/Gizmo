@@ -147,6 +147,14 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
                     C.drag_start_translation_offset = translation.* - point;
                 result = point + C.drag_start_translation_offset;
             }
+
+            _, proj_center := WorldToScreen (C.drag_start_translation);
+            DrawText (
+                tprint ("X: % Y: % Z: %", result.x, result.y, result.z),
+                proj_center + .{10, 10},
+                C.style.colors[StyleColor.Text],
+                C.style.colors[StyleColor.Text_Shadow]
+            );
         }
 
         color := ifx C.hovered_id == view_id || C.active_id == view_id
@@ -219,6 +227,13 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
                 dist *= C.style.translation_drag_sensitivity;
 
                 result = C.drag_start_translation + axes_vectors[i] * factor * dist;
+
+                DrawText (
+                    tprint ("X: % Y: % Z: %", result.x, result.y, result.z),
+                    proj_center + .{10, 10},
+                    C.style.colors[StyleColor.Text],
+                    C.style.colors[StyleColor.Text_Shadow]
+                );
             }
         }
 
@@ -395,6 +410,14 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
                 result.component[i] = s * abs (C.drag_start_scale.component[i]) * ratio;
 
                 end = translation + widget_size * C.drag_start_scale_axis * s * ratio;
+
+                XYZ :: string.["X","Y","Z"];
+                DrawText (
+                    tprint ("%: %", XYZ[i], result.component[i]),
+                    proj_center + .{10, 10},
+                    C.style.colors[StyleColor.Text],
+                    C.style.colors[StyleColor.Text_Shadow]
+                );
             }
         }
 
@@ -487,6 +510,13 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
                 result = abs (C.drag_start_scale) * abs (t2 / t1);
                 result = result * s;
                 widget_size *= t2 / t1;
+
+                DrawText (
+                    tprint ("X: % Y: % Z: %", result.x, result.y, result.z),
+                    proj_center + .{10, 10},
+                    C.style.colors[StyleColor.Text],
+                    C.style.colors[StyleColor.Text_Shadow]
+                );
             }
         }
 
@@ -704,6 +734,14 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
                     translation + rotate (rotation_start_dir, rotated) * radius,
                     axes_active_colors[i],
                     thickness
+                );
+
+                _, angle_text_pos := WorldToScreen (translation + rotation_start_dir * radius * 1.2);
+                DrawText (
+                    tprint ("% deg", angle * 180 / PI),
+                    angle_text_pos,
+                    C.style.colors[StyleColor.Text],
+                    C.style.colors[StyleColor.Text_Shadow]
                 );
             }
         }
