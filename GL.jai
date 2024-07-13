@@ -184,7 +184,12 @@ RenderDrawData :: ()
 Cleanup :: ()
 {
     C := Gizmo.GetContext ();
+    assert (C != null, "Gizmo context not created or already destroyed");
+
     R := cast (*RendererData) C.renderer;
+    if !R
+        return;
+
     glDeleteVertexArrays (1, *R.vao);
     glDeleteBuffers (1, *R.vbo);
     R.vbo_size = 0;
