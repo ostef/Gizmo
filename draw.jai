@@ -244,17 +244,37 @@ DrawCircleFilled :: (center : Vec3f, radius : float, color : Vec4f, tangent : Ve
     DrawSemiCircleFilled (center, radius, color, tangent, bitangent, 0, PI * 2, resolution);
 }
 
-DrawCircle :: (center : Vec3f, radius : float, color : Vec4f, thickness : float, tangent : Vec3f, bitangent : Vec3f, resolution := 200)
+DrawCircle :: inline (
+    center : Vec3f,
+    radius : float,
+    color : Vec4f,
+    thickness : float,
+    tangent : Vec3f, bitangent : Vec3f,
+    resolution := 200
+)
+{
+    DrawSemiCircle (center, radius, color, 0, 2 * PI, thickness, tangent, bitangent, resolution);
+}
+
+DrawSemiCircle :: (
+    center : Vec3f,
+    radius : float,
+    color : Vec4f,
+    start_angle : float, angle : float,
+    thickness : float,
+    tangent : Vec3f, bitangent : Vec3f,
+    resolution := 200
+)
 {
     C := GetContext ();
 
     if radius <= 0 || color.w <= 0
         return;
 
-    theta := -PI * 2 / cast (float) resolution;
+    theta := -angle / cast (float) resolution;
     tan_factor := tan (theta);
     rad_factor := cos (theta);
-    p := Vec2f.{1,0};
+    p := Vec2f.{cos (start_angle), sin (start_angle)};
 
     for i : 0..resolution - 1
     {

@@ -155,7 +155,7 @@ Style :: struct
     sensitivity_slow_factor := 0.1;
 
     translation_snap_grid_size := 1.0;
-    translation_drag_sensitivity := 0.05;
+    translation_drag_sensitivity := 0.01;
     translation_handle_thickness := 3.0;
     translation_arrow_size := 20.0;
     translation_arrow_aspect_ratio := 0.5;
