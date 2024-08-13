@@ -163,7 +163,7 @@ RenderDrawData :: ()
 
     glBindFramebuffer (GL_FRAMEBUFFER, 0);
 
-    glViewport (0, 0, xx C.display_size.x, xx C.display_size.y);
+    glViewport (0, 0, xx C.framebuffer_size.x, xx C.framebuffer_size.y);
 
     glUseProgram (R.shader);
 

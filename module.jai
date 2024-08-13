@@ -68,6 +68,7 @@ KeyboardInteractionFlags :: enum_flags
 GizmoContext :: struct
 {
     display_size : Vec2f;
+    framebuffer_size : Vec2f;
     mouse_pos : Vec2f;
     prev_key_states : [Key.Count]bool;
     key_states : [Key.Count]bool;
@@ -342,6 +343,7 @@ SetCamera :: (
 
 NewFrame :: (
     display_size : Vec2f,
+    scale_factor : float,
     mouse_pos : Vec2f
 )
 {
@@ -367,6 +369,7 @@ NewFrame :: (
     }
 
     C.display_size = display_size;
+    C.framebuffer_size = display_size * scale_factor;
     C.mouse_pos = mouse_pos;
 
     C.text_buffer.count = 0;
