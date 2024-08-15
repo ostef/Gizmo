@@ -1,4 +1,5 @@
 // @Todo: use indices to reduce memory usage
+Default_Circle_Resolution :: 50;
 
 TextToDraw :: struct
 {
@@ -209,7 +210,7 @@ DrawSquareArrow :: (start : Vec3f, end : Vec3f, color : Vec4f, thickness : float
     DrawSquareArrow2D (proj_start, proj_end, color, thickness, size);
 }
 
-DrawSemiCircleFilled :: (center : Vec3f, radius : float, color : Vec4f, tangent : Vec3f, bitangent : Vec3f, start_angle : float, angle : float, resolution := 100)
+DrawSemiCircleFilled :: (center : Vec3f, radius : float, color : Vec4f, tangent : Vec3f, bitangent : Vec3f, start_angle : float, angle : float, resolution := Default_Circle_Resolution)
 {
     C := GetContext ();
 
@@ -239,7 +240,7 @@ DrawSemiCircleFilled :: (center : Vec3f, radius : float, color : Vec4f, tangent 
     }
 }
 
-DrawCircleFilled :: (center : Vec3f, radius : float, color : Vec4f, tangent : Vec3f, bitangent : Vec3f, resolution := 100)
+DrawCircleFilled :: (center : Vec3f, radius : float, color : Vec4f, tangent : Vec3f, bitangent : Vec3f, resolution := Default_Circle_Resolution)
 {
     DrawSemiCircleFilled (center, radius, color, tangent, bitangent, 0, PI * 2, resolution);
 }
@@ -250,7 +251,7 @@ DrawCircle :: inline (
     color : Vec4f,
     thickness : float,
     tangent : Vec3f, bitangent : Vec3f,
-    resolution := 200
+    resolution := Default_Circle_Resolution
 )
 {
     DrawSemiCircle (center, radius, color, 0, 2 * PI, thickness, tangent, bitangent, resolution);
@@ -263,7 +264,7 @@ DrawSemiCircle :: (
     start_angle : float, angle : float,
     thickness : float,
     tangent : Vec3f, bitangent : Vec3f,
-    resolution := 200
+    resolution := Default_Circle_Resolution
 )
 {
     C := GetContext ();
@@ -294,7 +295,7 @@ DrawSemiCircle :: (
     }
 }
 
-DrawFacingCircle :: (center : Vec3f, radius : float, color : Vec4f, thickness : float, tangent : Vec3f, bitangent : Vec3f, epsilon := 0.01, resolution := 200)
+DrawFacingCircle :: (center : Vec3f, radius : float, color : Vec4f, thickness : float, tangent : Vec3f, bitangent : Vec3f, epsilon := 0.01, resolution := Default_Circle_Resolution)
 {
     C := GetContext ();
 
