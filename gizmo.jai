@@ -18,25 +18,22 @@ CalculateWidgetSize :: inline (position : Vec3f) -> float #must
     return widget_size;
 }
 
-GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) -> bool
+GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) -> InteractionState
 {
     C := GetContext ();
 
     if flags & .No_Translation
-        return false;
+        return 0;
 
-    modified := false;
     gizmo_id := GetID (id);
-    kb_drag_start, kb_dragging, kb_drag_cancel
-        := KeyboardBehavior (gizmo_id, .Translate, translation.*);
-    kb_interact := kb_dragging || kb_drag_cancel;
+    kb_state := KeyboardBehavior (gizmo_id, .Translate, translation.*);
 
-    if kb_drag_cancel
+    if kb_state & .Cancelled
         translation.* = C.drag_start_translation;
-    if kb_drag_start
+    if kb_state & .Started
         C.drag_start_translation = translation.*;
 
-    modified ||= kb_interact;
+    result_state : InteractionState;
 
     result := translation.*;
     defer translation.* = result;
@@ -106,8 +103,8 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
 
     if !ignore_view
     {
-        drag_start, dragging, cancelled_dragging : bool;
-        if !kb_interact
+        drag_state : InteractionState;
+        if !kb_state
         {
             hovered := IsCircleFilledHovered (
                 translation.*,
@@ -115,26 +112,24 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
                 widget_size * C.style.translation_view_circle_size
             );
 
-            drag_start, dragging, cancelled_dragging
-                = DraggingBehavior (view_id, hovered, .Translation_Plane, translation.*);
+            drag_state = DraggingBehavior (view_id, hovered, .Translation_Plane, translation.*);
         }
         else if C.keyboard_interaction_flags == 0
         {
-            drag_start = kb_drag_start;
-            dragging = kb_dragging;
-            cancelled_dragging = kb_drag_cancel;
+            drag_state = kb_state;
         }
 
-        modified ||= dragging || cancelled_dragging;
+        if drag_state
+            result_state = drag_state;
 
-        if cancelled_dragging
+        if drag_state & .Cancelled
             result = C.drag_start_translation;
 
-        if dragging
+        if drag_state & .Interacting
         {
             C.active_interaction = .Translation_Plane;
 
-            if drag_start
+            if drag_state & .Started
                 C.drag_start_translation = translation.*;
 
             origin := C.drag_start_translation;
@@ -143,7 +138,7 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
 
             if intersects
             {
-                if drag_start
+                if drag_state & .Started
                     C.drag_start_translation_offset = translation.* - point;
 
                 proj_point : Vec2f;
@@ -198,34 +193,32 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
         end := translation.* + widget_size * axes_vectors[i];
         dim := CalculateDimFactor (translation.*, axes_vectors[i]);
 
-        drag_start, dragging, cancelled_dragging : bool;
-        if !kb_interact
+        drag_state : InteractionState;
+        if !kb_state
         {
             hovered := dim > 0.1 && IsLineHovered (
                 start, end,
                 C.style.translation_handle_thickness + C.style.line_interaction_threshold
             );
 
-            drag_start, dragging, cancelled_dragging
-                = DraggingBehavior (id, hovered, .Translation_Axis, translation.*);
+            drag_state = DraggingBehavior (id, hovered, .Translation_Axis, translation.*);
         }
         else if C.keyboard_interaction_flags == xx (1 << i)
         {
-            drag_start = kb_drag_start;
-            dragging = kb_dragging;
-            cancelled_dragging = kb_drag_cancel;
+            drag_state = kb_state;
         }
 
-        modified ||= dragging || cancelled_dragging;
+        if drag_state
+            result_state = drag_state;
 
-        if cancelled_dragging
+        if drag_state & .Cancelled
             result = C.drag_start_translation;
 
-        if dragging
+        if drag_state & .Interacting
         {
             C.active_interaction = .Translation_Axis;
 
-            if drag_start
+            if drag_state & .Started
                 C.drag_start_translation = translation.*;
 
             center_behind, proj_center := WorldToScreen (C.drag_start_translation);
@@ -259,7 +252,7 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
         color := ifx C.hovered_id == id || C.active_id == id
             then axes_active_colors[i] else axes_colors[i] * .{1,1,1,dim};
 
-        if dragging
+        if drag_state & .Interacting
         {
             DrawLine (
                 translation.* - axes_vectors[i] * 500,
@@ -286,32 +279,29 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
         );
     }
 
-    return modified;
+    return result_state;
 }
 
-GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
+GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> InteractionState
 {
     C := GetContext ();
 
     if flags & .No_Scale
-        return false;
+        return 0;
 
     model_matrix := GetGizmoMatrix ();
     translation := TranslationVector (model_matrix);
     model_matrix = RotationMatrix (model_matrix);
 
-    modified := false;
     gizmo_id := GetID (id);
-    kb_drag_start, kb_dragging, kb_drag_cancel
-        := KeyboardBehavior (gizmo_id, .Scale, translation);
-    kb_interact := kb_dragging || kb_drag_cancel;
+    kb_state := KeyboardBehavior (gizmo_id, .Scale, translation);
 
-    if kb_drag_cancel
+    if kb_state & .Cancelled
         scale.* = C.drag_start_scale;
-    if kb_drag_start
+    if kb_state & .Started
         C.drag_start_scale = scale.*;
 
-    modified ||= kb_interact;
+    result_state : InteractionState;
 
     result := scale.*;
     defer scale.* = result;
@@ -379,32 +369,30 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
         end := translation + widget_size * axes_vectors[i];
         dim := CalculateDimFactor (translation, axes_vectors[i]);
 
-        drag_start, dragging, cancelled_dragging : bool;
-        if !kb_interact
+        drag_state : InteractionState;
+        if !kb_state
         {
             hovered := dim > 0.1 && IsLineHovered (
                 start, end,
                 C.style.scale_handle_thickness + C.style.line_interaction_threshold
             );
 
-            drag_start, dragging, cancelled_dragging
-                = DraggingBehavior (id, hovered, .Scale_Axis, translation);
+            drag_state = DraggingBehavior (id, hovered, .Scale_Axis, translation);
         }
         else if C.keyboard_interaction_flags == xx (1 << i)
         {
-            drag_start = kb_drag_start;
-            dragging = kb_dragging;
-            cancelled_dragging = kb_drag_cancel;
+            drag_state = kb_state;
         }
 
-        modified ||= dragging || cancelled_dragging;
+        if drag_state
+            result_state = drag_state;
 
-        if cancelled_dragging
+        if drag_state & .Cancelled
             result = C.drag_start_scale;
 
-        if dragging
+        if drag_state & .Interacting
         {
-            if drag_start
+            if drag_state & .Started
             {
                 C.drag_start_scale = scale;
                 C.drag_start_scale_axis = axes_vectors[i];
@@ -451,7 +439,7 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
         color := ifx C.hovered_id == id || C.active_id == id
             then axes_active_colors[i] else axes_colors[i] * .{1,1,1,dim};
 
-        if dragging
+        if drag_state & .Interacting
         {
             DrawLine (
                 translation - axes_vectors[i] * 500,
@@ -484,8 +472,8 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
 
     if !ignore_all
     {
-        drag_start, dragging, cancelled_dragging : bool;
-        if !kb_interact
+        drag_state : InteractionState;
+        if !kb_state
         {
             hovered := IsCircleFilledHovered (
                 translation,
@@ -493,24 +481,22 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
                 widget_size * C.style.scale_all_outer_circle_size
             );
 
-            drag_start, dragging, cancelled_dragging
-                = DraggingBehavior (all_id, hovered, .Scale_All, translation);
+            drag_state = DraggingBehavior (all_id, hovered, .Scale_All, translation);
         }
         else if C.keyboard_interaction_flags == 0
         {
-            drag_start = kb_drag_start;
-            dragging = kb_dragging;
-            cancelled_dragging = kb_drag_cancel;
+            drag_state = kb_state;
         }
 
-        modified ||= dragging || cancelled_dragging;
+        if drag_state
+            result_state = drag_state;
 
-        if cancelled_dragging
+        if drag_state & .Cancelled
             result = C.drag_start_scale;
 
-        if dragging
+        if drag_state & .Interacting
         {
-            if drag_start
+            if drag_state & .Started
             {
                 C.drag_start_scale = scale;
                 C.drag_start_scale_axis = .{1,1,1};
@@ -593,31 +579,28 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> bool
         }
     }
 
-    return modified;
+    return result_state;
 }
 
-GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> bool
+GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> InteractionState
 {
     C := GetContext ();
 
     if flags & .No_Rotation
-        return false;
+        return 0;
 
     matrix := GetGizmoMatrix ();
     translation := TranslationVector (matrix);
 
-    modified := false;
     gizmo_id := GetID (id);
-    kb_drag_start, kb_dragging, kb_drag_cancel
-        := KeyboardBehavior (gizmo_id, .Rotate, translation);
-    kb_interact := kb_dragging || kb_drag_cancel;
+    kb_state := KeyboardBehavior (gizmo_id, .Rotate, translation);
 
-    if kb_drag_cancel
+    if kb_state & .Cancelled
         rotation.* = C.drag_start_rotation;
-    if kb_drag_start
+    if kb_state & .Started
         C.drag_start_rotation = rotation.*;
 
-    modified ||= kb_interact;
+    result_state : InteractionState;
 
     result := rotation.*;
     defer rotation.* = result;
@@ -705,8 +688,8 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
             thickness = C.style.rotation_handle_thickness;
         }
 
-        drag_start, dragging, cancelled_dragging : bool;
-        if !kb_interact
+        drag_state : InteractionState;
+        if !kb_state
         {
             hovered := IsFacingCircleHovered (
                 translation,
@@ -715,24 +698,22 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
                 tangent, bitangent
             );
 
-            drag_start, dragging, cancelled_dragging
-                = DraggingBehavior (id, hovered, .Rotation_Axis, translation);
+            drag_state = DraggingBehavior (id, hovered, .Rotation_Axis, translation);
         }
         else if C.keyboard_interaction_flags == keyboard_flags
         {
-            drag_start = kb_drag_start;
-            dragging = kb_dragging;
-            cancelled_dragging = kb_drag_cancel;
+            drag_state = kb_state;
         }
 
-        modified ||= dragging || cancelled_dragging;
+        if drag_state
+            result_state = drag_state;
 
-        if cancelled_dragging
+        if drag_state & .Cancelled
             result = C.drag_start_rotation;
 
-        if dragging
+        if drag_state & .Interacting
         {
-            if drag_start
+            if drag_state & .Started
             {
                 C.drag_start_rotation_axis = axes_vectors[i];
                 C.drag_start_rotation = rotation.*;
@@ -741,7 +722,7 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
             origin := translation;
             ray_origin, ray_dir := RayFromMouse ();
             intersects, point := RayIntersectsPlane (ray_origin, ray_dir, origin, C.drag_start_rotation_axis);
-            if drag_start
+            if drag_state & .Started
             {
                 C.drag_start_rotation_point = point;
             }
@@ -802,7 +783,7 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
         color := ifx C.hovered_id == id || C.active_id == id
             then axes_active_colors[i] else axes_colors[i];
 
-        if dragging
+        if drag_state & .Interacting
         {
             DrawCircle (
                 translation,
@@ -831,17 +812,16 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
     if !ignore_trackball
     {
         hovered := IsCircleFilledHovered (translation, camera_forward, widget_size);
-        drag_start, dragging, cancelled_dragging
-            := DraggingBehavior (trackball_id, hovered, .Rotation_Trackball, translation);
+        drag_state := DraggingBehavior (trackball_id, hovered, .Rotation_Trackball, translation);
+        if drag_state
+            result_state = drag_state;
 
-        modified ||= dragging || cancelled_dragging;
-
-        if cancelled_dragging
+        if drag_state & .Cancelled
             result = C.drag_start_rotation;
 
-        if dragging
+        if drag_state & .Interacting
         {
-            if drag_start
+            if drag_state & .Started
             {
                 C.drag_start_rotation = rotation.*;
             }
@@ -862,7 +842,7 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
             then C.style.colors[StyleColor.Rotation_Trackball_Active]
             else C.style.colors[StyleColor.Rotation_Trackball];
 
-        if !dragging
+        if !(drag_state & .Interacting)
         {
             DrawCircleFilled (
                 translation,
@@ -897,7 +877,7 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> boo
         }
     }
 
-    return modified;
+    return result_state;
 }
 
 GizmoTransform :: (
@@ -907,7 +887,7 @@ GizmoTransform :: (
     scale : *Vec3f,
     type : GizmoType,
     flags : GizmoFlags = 0
-) -> bool
+) -> InteractionState
 {
     C := GetContext ();
 
@@ -971,5 +951,5 @@ GizmoTransform :: (
         DrawOrigin (translation);
     }
 
-    return false;
+    return 0;
 }
