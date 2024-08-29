@@ -333,11 +333,13 @@ DrawFacingCircle :: (center : Vec3f, radius : float, color : Vec4f, thickness : 
     }
 }
 
-DrawText :: inline (text : string, position : Vec3f, color : Vec4f, shadow_color : Vec4f)
+DrawText :: (text : string, position : Vec3f, color : Vec4f, shadow_color : Vec4f)
 {
-    is_behind, proj_position := WorldToScreen (position);
-    if !is_behind
-        DrawText (text, proj_position, color, shadow_color);
+    is_behind, on_screen := WorldToScreen (position);
+    if is_behind
+        return;
+
+    DrawText (text, on_screen, color, shadow_color);
 }
 
 DrawText :: (text : string, position : Vec2f, color : Vec4f, shadow_color : Vec4f)
