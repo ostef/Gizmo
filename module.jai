@@ -236,6 +236,8 @@ GizmoFlags :: enum_flags
     No_Translation;
     No_Scale;
     No_Rotation;
+
+    Global_Space;
 }
 
 InteractionState :: enum_flags

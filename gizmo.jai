@@ -66,8 +66,12 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
         .{0,1,0},
         .{0,0,1},
     ];
-    for * axes_vectors
-        it.* = transform_vector (model_rotation, it.*);
+
+    if !(flags & .Global_Space)
+    {
+        for * axes_vectors
+            it.* = transform_vector (model_rotation, it.*);
+    }
 
     axes_colors := Vec4f.[
         style.colors[StyleColor.X_Axis],
@@ -329,8 +333,12 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> Interacti
         .{0,1,0},
         .{0,0,1},
     ];
-    for * axes_vectors
-        it.* = transform_vector (model_matrix, it.*);
+
+    if !(flags & .Global_Space)
+    {
+        for * axes_vectors
+            it.* = transform_vector (model_matrix, it.*);
+    }
 
     axes_colors := Vec4f.[
         style.colors[StyleColor.X_Axis],
@@ -621,12 +629,20 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> Int
         GetID ("rotate_view"),
         trackball_id,
     ];
+
     axes_vectors := Vec3f.[
-        RightVector (rotation.*),
-        UpVector (rotation.*),
-        ForwardVector (rotation.*),
+        .{1,0,0},
+        .{0,1,0},
+        .{0,0,1},
         camera_forward,
     ];
+
+    if !(flags & .Global_Space)
+    {
+        for i : 0..2
+            axes_vectors[i] = rotate (axes_vectors[i], rotation.*);
+    }
+
     axes_colors := Vec4f.[
         C.style.colors[StyleColor.X_Axis],
         C.style.colors[StyleColor.Y_Axis],
