@@ -288,6 +288,33 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
 
 GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> InteractionState
 {
+    ThreeAxes :: struct
+    {
+        x, y, z : Vec3f;
+
+        #place x;
+        axes : [3]Vec3f;
+    }
+
+    operator * :: (axes : ThreeAxes, vec : Vec3f) -> ThreeAxes #must
+    {
+        return .{axes.x * vec.x, axes.y * vec.y, axes.z * vec.z};
+    }
+
+    GetScaleOnAxis :: (scale : ThreeAxes, axis : Vec3f) -> float #must
+    {
+        return abs (dot (scale.x, axis)) + abs (dot (scale.y, axis)) + abs (dot (scale.z, axis));
+    }
+
+    ProjectScale :: (scale : ThreeAxes, onto : ThreeAxes) -> Vec3f #must
+    {
+        return .{
+            GetScaleOnAxis (scale, onto.x),
+            GetScaleOnAxis (scale, onto.y),
+            GetScaleOnAxis (scale, onto.z),
+        };
+    }
+
     C := GetContext ();
 
     if flags & .No_Scale
@@ -333,12 +360,20 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> Interacti
         .{0,1,0},
         .{0,0,1},
     ];
+    local_axes_vectors := Vec3f.[
+        .{1,0,0},
+        .{0,1,0},
+        .{0,0,1},
+    ];
 
     if !(flags & .Global_Space)
     {
         for * axes_vectors
             it.* = transform_vector (model_matrix, it.*);
     }
+
+    for * local_axes_vectors
+        it.* = transform_vector (model_matrix, it.*);
 
     axes_colors := Vec4f.[
         style.colors[StyleColor.X_Axis],
@@ -402,7 +437,7 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> Interacti
         {
             if drag_state & .Started
             {
-                C.drag_start_scale = scale;
+                C.drag_start_scale = ProjectScale (ThreeAxes.{axes=local_axes_vectors} * scale.*, .{axes=axes_vectors});
                 C.drag_start_scale_axis = axes_vectors[i];
             }
 
@@ -430,13 +465,21 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> Interacti
                 if IsKeyDown (.Snap)
                     additional_scale = Snap (additional_scale, C.style.scale_snap_grid_size);
 
-                result.component[i] = C.drag_start_scale.component[i] + additional_scale;
+                scale_axes := ThreeAxes.{
+                    axes_vectors[0] * C.drag_start_scale.component[0],
+                    axes_vectors[1] * C.drag_start_scale.component[1],
+                    axes_vectors[2] * C.drag_start_scale.component[2],
+                };
+                scale_axes.axes[i] += axes_vectors[i] * additional_scale;
+                scale_on_axis := C.drag_start_scale.component[i] + additional_scale;
+
+                result = ProjectScale (scale_axes, .{axes=local_axes_vectors});
 
                 end = translation + widget_size * C.drag_start_scale_axis * s * ratio;
 
                 XYZ :: string.["X","Y","Z"];
                 DrawText (
-                    tprint ("%: %", XYZ[i], result.component[i]),
+                    tprint ("%: %", XYZ[i], scale_on_axis),
                     proj_center + .{10, 10},
                     C.style.colors[StyleColor.Text],
                     C.style.colors[StyleColor.Text_Shadow]
