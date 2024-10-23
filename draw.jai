@@ -16,23 +16,23 @@ DrawVertex :: struct
 
 DrawOrigin :: (center : Vec3f)
 {
-    C := GetContext ();
+    C := GetContext();
 
     if C.style.origin_circle_size <= 0
         return;
 
-    camera_right := RightVector (C.camera_transform);
-    camera_up := UpVector (C.camera_transform);
-    widget_size := CalculateWidgetSize (center);
+    camera_right := RightVector(C.camera_transform);
+    camera_up := UpVector(C.camera_transform);
+    widget_size := CalculateWidgetSize(center);
 
-    DrawCircleFilled (
+    DrawCircleFilled(
         center,
         widget_size * C.style.origin_circle_size,
         C.style.colors[StyleColor.Origin_Outline],
         camera_right, camera_up
     );
 
-    DrawCircleFilled (
+    DrawCircleFilled(
         center,
         widget_size * C.style.origin_circle_size * 0.7,
         C.style.colors[StyleColor.Origin],
@@ -42,30 +42,30 @@ DrawOrigin :: (center : Vec3f)
 
 DrawTriangle :: (p0 : Vec3f, p1 : Vec3f, p2 : Vec3f, color : Vec4f)
 {
-    C := GetContext ();
+    C := GetContext();
 
-    is_behind, proj_p0 := WorldToScreen (p0);
+    is_behind, proj_p0 := WorldToScreen(p0);
     if is_behind
         return;
 
-    is_behind=, proj_p1 := WorldToScreen (p1);
+    is_behind=, proj_p1 := WorldToScreen(p1);
     if is_behind
         return;
 
-    is_behind=, proj_p2 := WorldToScreen (p2);
+    is_behind=, proj_p2 := WorldToScreen(p2);
     if is_behind
         return;
 
-    DrawTriangle2D (proj_p0, proj_p1, proj_p2, color);
+    DrawTriangle2D(proj_p0, proj_p1, proj_p2, color);
 }
 
 DrawTriangle2D :: (p0 : Vec2f, p1 : Vec2f, p2 : Vec2f, color : Vec4f)
 {
-    C := GetContext ();
+    C := GetContext();
 
-    array_add (*C.draw_vertices, .{.{xy=p0}, color});
-    array_add (*C.draw_vertices, .{.{xy=p1}, color});
-    array_add (*C.draw_vertices, .{.{xy=p2}, color});
+    array_add(*C.draw_vertices, .{.{xy=p0}, color});
+    array_add(*C.draw_vertices, .{.{xy=p1}, color});
+    array_add(*C.draw_vertices, .{.{xy=p2}, color});
 }
 
 DrawArrow2D :: (start : Vec2f, end : Vec2f, color : Vec4f, thickness : float, size : float, head_aspect_ratio := 1.0)
@@ -74,22 +74,22 @@ DrawArrow2D :: (start : Vec2f, end : Vec2f, color : Vec4f, thickness : float, si
         return;
 
     line_dir := end - start;
-    if !IsFinite (line_dir)
+    if !IsFinite(line_dir)
         return;
 
-    normalize (*line_dir);
+    normalize(*line_dir);
 
     offset := Vec2f.{-line_dir.y, line_dir.x};
     line_offset := offset * thickness * 0.5;
 
-    DrawTriangle2D (
+    DrawTriangle2D(
         start - line_offset,
         start + line_offset,
         end + line_offset,
         color
     );
 
-    DrawTriangle2D (
+    DrawTriangle2D(
         start - line_offset,
         end + line_offset,
         end - line_offset,
@@ -101,7 +101,7 @@ DrawArrow2D :: (start : Vec2f, end : Vec2f, color : Vec4f, thickness : float, si
         head_p0 := end - offset * size * 0.5 * head_aspect_ratio;
         head_p1 := end + offset * size * 0.5 * head_aspect_ratio;
         head_p2 := end + line_dir * size;
-        DrawTriangle2D (head_p0, head_p1, head_p2, color);
+        DrawTriangle2D(head_p0, head_p1, head_p2, color);
     }
 }
 
@@ -111,21 +111,21 @@ DrawSquareArrow2D :: (start : Vec2f, end : Vec2f, color : Vec4f, thickness : flo
         return;
 
     line_dir := end - start;
-    if !IsFinite (line_dir)
+    if !IsFinite(line_dir)
         return;
 
-    normalize (*line_dir);
+    normalize(*line_dir);
     offset := Vec2f.{-line_dir.y, line_dir.x};
     line_offset := offset * thickness * 0.5;
 
-    DrawTriangle2D (
+    DrawTriangle2D(
         start - line_offset,
         start + line_offset,
         end + line_offset,
         color
     );
 
-    DrawTriangle2D (
+    DrawTriangle2D(
         start - line_offset,
         end + line_offset,
         end - line_offset,
@@ -138,14 +138,14 @@ DrawSquareArrow2D :: (start : Vec2f, end : Vec2f, color : Vec4f, thickness : flo
         head_p1 := end + Vec2f.{1,-1} * size * 0.5;
         head_p2 := end + Vec2f.{1,1} * size * 0.5;
         head_p3 := end + Vec2f.{-1,1} * size * 0.5;
-        DrawTriangle2D (head_p0, head_p1, head_p2, color);
-        DrawTriangle2D (head_p0, head_p3, head_p2, color);
+        DrawTriangle2D(head_p0, head_p1, head_p2, color);
+        DrawTriangle2D(head_p0, head_p3, head_p2, color);
     }
 }
 
 DrawLine2D :: (start : Vec2f, end : Vec2f, color : Vec4f, thickness : float)
 {
-    DrawArrow2D (start, end, color, thickness, 0);
+    DrawArrow2D(start, end, color, thickness, 0);
 }
 
 DrawDashedLine2D :: (start : Vec2f, end : Vec2f, line_len : float, spacing : float, color : Vec4f, thickness : float)
@@ -153,19 +153,19 @@ DrawDashedLine2D :: (start : Vec2f, end : Vec2f, line_len : float, spacing : flo
     if thickness <= 0 || line_len <= 0 || color.w <= 0
         return;
 
-    spacing = max (spacing, 0);
+    spacing = max(spacing, 0);
 
     dir := end - start;
-    if !IsFinite (dir)
+    if !IsFinite(dir)
         return;
 
-    len := normalize (*dir);
+    len := normalize(*dir);
 
     i := 0.0;
     while i < len
     {
-        i2 := min (i + line_len, len);
-        DrawLine2D (start + dir * i, start + dir * i2, color, thickness);
+        i2 := min(i + line_len, len);
+        DrawLine2D(start + dir * i, start + dir * i2, color, thickness);
 
         i += line_len + spacing;
     }
@@ -173,54 +173,54 @@ DrawDashedLine2D :: (start : Vec2f, end : Vec2f, line_len : float, spacing : flo
 
 DrawLine :: (start : Vec3f, end : Vec3f, color : Vec4f, thickness : float)
 {
-    DrawArrow (start, end, color, thickness, 0);
+    DrawArrow(start, end, color, thickness, 0);
 }
 
 DrawArrow :: (start : Vec3f, end : Vec3f, color : Vec4f, thickness : float, size : float, head_aspect_ratio := 1.0)
 {
-    C := GetContext ();
+    C := GetContext();
 
-    clip_start, clip_end := ClipLine (start, end);
+    clip_start, clip_end := ClipLine(start, end);
 
-    is_behind, proj_start := WorldToScreen (clip_start);
+    is_behind, proj_start := WorldToScreen(clip_start);
     if is_behind
         return;
 
-    is_behind=, proj_end := WorldToScreen (clip_end);
+    is_behind=, proj_end := WorldToScreen(clip_end);
     if is_behind
         return;
 
-    DrawArrow2D (proj_start, proj_end, color, thickness, size, head_aspect_ratio);
+    DrawArrow2D(proj_start, proj_end, color, thickness, size, head_aspect_ratio);
 }
 
 DrawSquareArrow :: (start : Vec3f, end : Vec3f, color : Vec4f, thickness : float, size : float)
 {
-    C := GetContext ();
+    C := GetContext();
 
-    clip_start, clip_end := ClipLine (start, end);
+    clip_start, clip_end := ClipLine(start, end);
 
-    is_behind, proj_start := WorldToScreen (clip_start);
+    is_behind, proj_start := WorldToScreen(clip_start);
     if is_behind
         return;
 
-    is_behind=, proj_end := WorldToScreen (clip_end);
+    is_behind=, proj_end := WorldToScreen(clip_end);
     if is_behind
         return;
 
-    DrawSquareArrow2D (proj_start, proj_end, color, thickness, size);
+    DrawSquareArrow2D(proj_start, proj_end, color, thickness, size);
 }
 
 DrawSemiCircleFilled :: (center : Vec3f, radius : float, color : Vec4f, tangent : Vec3f, bitangent : Vec3f, start_angle : float, angle : float, resolution := Default_Circle_Resolution)
 {
-    C := GetContext ();
+    C := GetContext();
 
     if radius <= 0 || color.w <= 0
         return;
 
-    theta := -angle / cast (float) resolution;
-    tan_factor := tan (theta);
-    rad_factor := cos (theta);
-    p := Vec2f.{cos (start_angle), sin (start_angle)};
+    theta := -angle / cast(float) resolution;
+    tan_factor := tan(theta);
+    rad_factor := cos(theta);
+    p := Vec2f.{cos(start_angle), sin(start_angle)};
 
     for i : 0..resolution - 1
     {
@@ -236,13 +236,13 @@ DrawSemiCircleFilled :: (center : Vec3f, radius : float, color : Vec4f, tangent 
         start := center + (tangent * p1.x + bitangent * p1.y) * radius;
         end := center + (tangent * p2.x + bitangent * p2.y) * radius;
 
-        DrawTriangle (center, start, end, color);
+        DrawTriangle(center, start, end, color);
     }
 }
 
 DrawCircleFilled :: (center : Vec3f, radius : float, color : Vec4f, tangent : Vec3f, bitangent : Vec3f, resolution := Default_Circle_Resolution)
 {
-    DrawSemiCircleFilled (center, radius, color, tangent, bitangent, 0, PI * 2, resolution);
+    DrawSemiCircleFilled(center, radius, color, tangent, bitangent, 0, PI * 2, resolution);
 }
 
 DrawCircle :: inline (
@@ -254,7 +254,7 @@ DrawCircle :: inline (
     resolution := Default_Circle_Resolution
 )
 {
-    DrawSemiCircle (center, radius, color, 0, 2 * PI, thickness, tangent, bitangent, resolution);
+    DrawSemiCircle(center, radius, color, 0, 2 * PI, thickness, tangent, bitangent, resolution);
 }
 
 DrawSemiCircle :: (
@@ -267,15 +267,15 @@ DrawSemiCircle :: (
     resolution := Default_Circle_Resolution
 )
 {
-    C := GetContext ();
+    C := GetContext();
 
     if radius <= 0 || color.w <= 0
         return;
 
-    theta := -angle / cast (float) resolution;
-    tan_factor := tan (theta);
-    rad_factor := cos (theta);
-    p := Vec2f.{cos (start_angle), sin (start_angle)};
+    theta := -angle / cast(float) resolution;
+    tan_factor := tan(theta);
+    rad_factor := cos(theta);
+    p := Vec2f.{cos(start_angle), sin(start_angle)};
 
     for i : 0..resolution - 1
     {
@@ -291,22 +291,22 @@ DrawSemiCircle :: (
         start := center + (tangent * p1.x + bitangent * p1.y) * radius;
         end := center + (tangent * p2.x + bitangent * p2.y) * radius;
 
-        DrawLine (start, end, color, thickness);
+        DrawLine(start, end, color, thickness);
     }
 }
 
 DrawFacingCircle :: (center : Vec3f, radius : float, color : Vec4f, thickness : float, tangent : Vec3f, bitangent : Vec3f, epsilon := 0.01, resolution := Default_Circle_Resolution)
 {
-    C := GetContext ();
+    C := GetContext();
 
     if radius <= 0 || color.w <= 0
         return;
 
     view_dir := ForwardVector (C.camera_transform);
 
-    theta := -PI * 2 / cast (float) resolution;
-    tan_factor := tan (theta);
-    rad_factor := cos (theta);
+    theta := -PI * 2 / cast(float) resolution;
+    tan_factor := tan(theta);
+    rad_factor := cos(theta);
     p := Vec2f.{1,0};
 
     for i : 0..resolution - 1
@@ -323,43 +323,43 @@ DrawFacingCircle :: (center : Vec3f, radius : float, color : Vec4f, thickness : 
         start := tangent * p1.x + bitangent * p1.y;
         end := tangent * p2.x + bitangent * p2.y;
 
-        if dot (start, view_dir) > epsilon || dot (end, view_dir) > epsilon
+        if dot(start, view_dir) > epsilon || dot(end, view_dir) > epsilon
             continue;
 
         start = center + start * radius;
         end = center + end * radius;
 
-        DrawLine (start, end, color, thickness);
+        DrawLine(start, end, color, thickness);
     }
 }
 
 DrawText :: (text : string, position : Vec3f, color : Vec4f, shadow_color : Vec4f)
 {
-    is_behind, on_screen := WorldToScreen (position);
+    is_behind, on_screen := WorldToScreen(position);
     if is_behind
         return;
 
-    DrawText (text, on_screen, color, shadow_color);
+    DrawText(text, on_screen, color, shadow_color);
 }
 
 DrawText :: (text : string, position : Vec2f, color : Vec4f, shadow_color : Vec4f)
 {
-    C := GetContext ();
+    C := GetContext();
 
     if shadow_color.w > 0
     {
-        shadow := array_add (*C.texts_to_draw);
+        shadow := array_add(*C.texts_to_draw);
         shadow.start = C.text_buffer.count;
         shadow.count = text.count;
         shadow.position = position + .{2,2};
         shadow.color = shadow_color;
     }
 
-    to_draw := array_add (*C.texts_to_draw);
+    to_draw := array_add(*C.texts_to_draw);
     to_draw.start = C.text_buffer.count;
     to_draw.count = text.count;
     to_draw.position = position;
     to_draw.color = color;
 
-    array_add (*C.text_buffer, ..(cast ([]u8) text));
+    array_add(*C.text_buffer, ..(cast([]u8) text));
 }

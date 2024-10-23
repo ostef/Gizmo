@@ -1,18 +1,18 @@
 CalculateDimFactor :: inline (center : Vec3f, axis : Vec3f) -> float #must
 {
-    C := GetContext ();
+    C := GetContext();
 
-    camera_position := TranslationVector (GetContext ().camera_transform);
-    center_to_camera := normalize (camera_position - center);
+    camera_position := TranslationVector(GetContext().camera_transform);
+    center_to_camera := normalize(camera_position - center);
 
-    return clamp ((1 - abs (dot (axis, center_to_camera))) * 30 - 0.1, 0, 1);
+    return clamp((1 - abs(dot(axis, center_to_camera))) * 30 - 0.1, 0, 1);
 }
 
 CalculateWidgetSize :: inline (position : Vec3f) -> float #must
 {
-    C := GetContext ();
+    C := GetContext();
 
-    widget_size := distance (position, TranslationVector (C.camera_transform));
+    widget_size := distance(position, TranslationVector(C.camera_transform));
     widget_size /= 1 / C.style.global_size * 12.5;
 
     return widget_size;
@@ -20,13 +20,13 @@ CalculateWidgetSize :: inline (position : Vec3f) -> float #must
 
 GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) -> InteractionState
 {
-    C := GetContext ();
+    C := GetContext();
 
     if flags & .No_Translation
         return 0;
 
-    gizmo_id := GetID (id);
-    kb_state := KeyboardBehavior (gizmo_id, .Translate, translation.*);
+    gizmo_id := GetID(id);
+    kb_state := KeyboardBehavior(gizmo_id, .Translate, translation.*);
 
     if kb_state & .Cancelled
         translation.* = C.drag_start_translation;
@@ -38,28 +38,28 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
     result := translation.*;
     defer translation.* = result;
 
-    PushID (id);
-    defer PopID ();
+    PushID(id);
+    defer PopID();
 
-    model_matrix := GetGizmoMatrix ();
-    model_rotation := RotationMatrix (model_matrix);
+    model_matrix := GetGizmoMatrix();
+    model_rotation := RotationMatrix(model_matrix);
 
     camera_forward := ForwardVector (C.camera_transform);
-    camera_right := RightVector (C.camera_transform);
-    camera_up := UpVector (C.camera_transform);
-    widget_size := CalculateWidgetSize (translation.*);
+    camera_right := RightVector(C.camera_transform);
+    camera_up := UpVector(C.camera_transform);
+    widget_size := CalculateWidgetSize(translation.*);
 
     style := C.style;
 
     axes_ids := u32.[
-        GetID ("translate_x"),
-        GetID ("translate_y"),
-        GetID ("translate_z"),
+        GetID("translate_x"),
+        GetID("translate_y"),
+        GetID("translate_z"),
     ];
     planes_ids := u32.[
-        GetID ("translate_xy"),
-        GetID ("translate_yz"),
-        GetID ("translate_zx"),
+        GetID("translate_xy"),
+        GetID("translate_yz"),
+        GetID("translate_zx"),
     ];
     axes_vectors := Vec3f.[
         .{1,0,0},
@@ -70,7 +70,7 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
     if !(flags & .Global_Space)
     {
         for * axes_vectors
-            it.* = transform_vector (model_rotation, it.*);
+            it.* = transform_vector(model_rotation, it.*);
     }
 
     axes_colors := Vec4f.[
@@ -94,29 +94,29 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
         flags & .No_Z_Axis != 0,
     ];
 
-    view_id := GetID ("translate_view");
+    view_id := GetID("translate_view");
 
-    if C.active_id != view_id && !array_find (axes_ids, C.active_id)
+    if C.active_id != view_id && !array_find(axes_ids, C.active_id)
     {
-        DrawOrigin (translation.*);
+        DrawOrigin(translation.*);
     }
 
     ignore_view := flags & .No_View_Axis != 0;
     ignore_view ||= C.active_id == gizmo_id && C.keyboard_interaction_flags != 0;
-    ignore_view ||= C.active_id != view_id && array_find (axes_ids, C.active_id);
+    ignore_view ||= C.active_id != view_id && array_find(axes_ids, C.active_id);
 
     if !ignore_view
     {
         drag_state : InteractionState;
         if !kb_state
         {
-            hovered := IsCircleFilledHovered (
+            hovered := IsCircleFilledHovered(
                 translation.*,
                 -camera_forward,
                 widget_size * C.style.translation_view_circle_size
             );
 
-            drag_state = DraggingBehavior (view_id, hovered, .Translation_Plane, translation.*);
+            drag_state = DraggingBehavior(view_id, hovered, .Translation_Plane, translation.*);
         }
         else if C.keyboard_interaction_flags == 0
         {
@@ -137,8 +137,8 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
                 C.drag_start_translation = translation.*;
 
             origin := C.drag_start_translation;
-            ray_origin, ray_dir := RayFromMouse ();
-            intersects, point := RayIntersectsPlane (ray_origin, ray_dir, origin, -camera_forward);
+            ray_origin, ray_dir := RayFromMouse();
+            intersects, point := RayIntersectsPlane(ray_origin, ray_dir, origin, -camera_forward);
 
             if intersects
             {
@@ -146,13 +146,13 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
                     C.drag_start_translation_offset = translation.* - point;
 
                 proj_point : Vec2f;
-                _, proj_point.x = ProjectPointOnInfiniteLine (point, origin, origin + camera_right);
-                _, proj_point.y = ProjectPointOnInfiniteLine (point, origin, origin + camera_up);
+                _, proj_point.x = ProjectPointOnInfiniteLine(point, origin, origin + camera_right);
+                _, proj_point.y = ProjectPointOnInfiniteLine(point, origin, origin + camera_up);
 
-                if IsKeyDown (.Snap)
+                if IsKeyDown(.Snap)
                 {
-                    proj_point.x = Snap (proj_point.x, C.style.translation_snap_grid_size);
-                    proj_point.y = Snap (proj_point.y, C.style.translation_snap_grid_size);
+                    proj_point.x = Snap(proj_point.x, C.style.translation_snap_grid_size);
+                    proj_point.y = Snap(proj_point.y, C.style.translation_snap_grid_size);
                 }
 
                 point = origin + proj_point.x * camera_right + proj_point.y * camera_up;
@@ -160,9 +160,9 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
                 result = point + C.drag_start_translation_offset;
             }
 
-            _, proj_center := WorldToScreen (C.drag_start_translation);
-            DrawText (
-                tprint ("X: % Y: % Z: %", result.x, result.y, result.z),
+            _, proj_center := WorldToScreen(C.drag_start_translation);
+            DrawText(
+                tprint("X: % Y: % Z: %", result.x, result.y, result.z),
                 proj_center + .{10, 10},
                 C.style.colors[StyleColor.Text],
                 C.style.colors[StyleColor.Text_Shadow]
@@ -173,13 +173,13 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
             then C.style.colors[StyleColor.View_Axis_Active]
             else C.style.colors[StyleColor.View_Axis];
 
-        DrawCircle (
+        DrawCircle(
             translation.*,
             widget_size * C.style.translation_view_circle_size,
             color,
             C.style.translation_view_circle_thickness,
-            RightVector (C.camera_transform),
-            UpVector (C.camera_transform)
+            RightVector(C.camera_transform),
+            UpVector(C.camera_transform)
         );
     }
 
@@ -188,24 +188,24 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
         id := axes_ids[i];
         ignore_axis := ignore_axes[i];
         ignore_axis ||= C.active_id == gizmo_id && C.keyboard_interaction_flags != xx (1 << i);
-        ignore_axis ||= C.active_id != id && array_find (axes_ids, C.active_id);
+        ignore_axis ||= C.active_id != id && array_find(axes_ids, C.active_id);
 
         if ignore_axis
             continue;
 
         start := translation.* + widget_size * axes_vectors[i] * C.style.translation_view_circle_size;
         end := translation.* + widget_size * axes_vectors[i];
-        dim := CalculateDimFactor (translation.*, axes_vectors[i]);
+        dim := CalculateDimFactor(translation.*, axes_vectors[i]);
 
         drag_state : InteractionState;
         if !kb_state
         {
-            hovered := dim > 0.1 && IsLineHovered (
+            hovered := dim > 0.1 && IsLineHovered(
                 start, end,
                 C.style.translation_handle_thickness + C.style.line_interaction_threshold
             );
 
-            drag_state = DraggingBehavior (id, hovered, .Translation_Axis, translation.*);
+            drag_state = DraggingBehavior(id, hovered, .Translation_Axis, translation.*);
         }
         else if C.keyboard_interaction_flags == xx (1 << i)
         {
@@ -225,27 +225,27 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
             if drag_state & .Started
                 C.drag_start_translation = translation.*;
 
-            center_behind, proj_center := WorldToScreen (C.drag_start_translation);
-            axis_behind, proj_axis := WorldToScreen (C.drag_start_translation + axes_vectors[i]);
+            center_behind, proj_center := WorldToScreen(C.drag_start_translation);
+            axis_behind, proj_axis := WorldToScreen(C.drag_start_translation + axes_vectors[i]);
             if !center_behind && !axis_behind
             {
                 mouse_offset := C.mouse_pos - C.mouse_drag_start;
-                proj_axis = normalize (proj_axis - proj_center);
-                mouse_dir := normalize (C.mouse_pos - C.mouse_drag_start);
-                dist := distance (C.mouse_drag_start, C.mouse_pos);
-                dist *= dot (proj_axis, mouse_dir);
+                proj_axis = normalize(proj_axis - proj_center);
+                mouse_dir := normalize(C.mouse_pos - C.mouse_drag_start);
+                dist := distance(C.mouse_drag_start, C.mouse_pos);
+                dist *= dot(proj_axis, mouse_dir);
                 dist *= C.style.translation_drag_sensitivity;
 
-                if IsKeyDown (.Slow)
+                if IsKeyDown(.Slow)
                     dist *= C.style.sensitivity_slow_factor;
 
-                if IsKeyDown (.Snap)
-                    dist = Snap (dist, C.style.translation_snap_grid_size);
+                if IsKeyDown(.Snap)
+                    dist = Snap(dist, C.style.translation_snap_grid_size);
 
                 result = C.drag_start_translation + axes_vectors[i] * dist;
 
-                DrawText (
-                    tprint ("X: % Y: % Z: %", result.x, result.y, result.z),
+                DrawText(
+                    tprint("X: % Y: % Z: %", result.x, result.y, result.z),
                     proj_center + .{10, 10},
                     C.style.colors[StyleColor.Text],
                     C.style.colors[StyleColor.Text_Shadow]
@@ -258,7 +258,7 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
 
         if drag_state & .Interacting
         {
-            DrawLine (
+            DrawLine(
                 translation.* - axes_vectors[i] * 500,
                 translation.* + axes_vectors[i] * 500,
                 axes_guide_colors[i],
@@ -266,7 +266,7 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
             );
 
             start = translation.*;
-            DrawCircleFilled (
+            DrawCircleFilled(
                 start,
                 widget_size * C.style.origin_circle_size,
                 color,
@@ -274,7 +274,7 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
             );
         }
 
-        DrawArrow (
+        DrawArrow(
             start, end,
             color,
             style.translation_handle_thickness,
@@ -303,29 +303,29 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> Interacti
 
     GetScaleOnAxis :: (scale : ThreeAxes, axis : Vec3f) -> float #must
     {
-        return abs (dot (scale.x, axis)) + abs (dot (scale.y, axis)) + abs (dot (scale.z, axis));
+        return abs(dot(scale.x, axis)) + abs(dot(scale.y, axis)) + abs(dot(scale.z, axis));
     }
 
     ProjectScale :: (scale : ThreeAxes, onto : ThreeAxes) -> Vec3f #must
     {
         return .{
-            GetScaleOnAxis (scale, onto.x),
-            GetScaleOnAxis (scale, onto.y),
-            GetScaleOnAxis (scale, onto.z),
+            GetScaleOnAxis(scale, onto.x),
+            GetScaleOnAxis(scale, onto.y),
+            GetScaleOnAxis(scale, onto.z),
         };
     }
 
-    C := GetContext ();
+    C := GetContext();
 
     if flags & .No_Scale
         return 0;
 
-    model_matrix := GetGizmoMatrix ();
-    translation := TranslationVector (model_matrix);
-    model_matrix = RotationMatrix (model_matrix);
+    model_matrix := GetGizmoMatrix();
+    translation := TranslationVector(model_matrix);
+    model_matrix = RotationMatrix(model_matrix);
 
-    gizmo_id := GetID (id);
-    kb_state := KeyboardBehavior (gizmo_id, .Scale, translation);
+    gizmo_id := GetID(id);
+    kb_state := KeyboardBehavior(gizmo_id, .Scale, translation);
 
     if kb_state & .Cancelled
         scale.* = C.drag_start_scale;
@@ -337,21 +337,21 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> Interacti
     result := scale.*;
     defer scale.* = result;
 
-    PushID (id);
-    defer PopID ();
+    PushID(id);
+    defer PopID();
 
     camera_forward := ForwardVector (C.camera_transform);
-    camera_right := RightVector (C.camera_transform);
-    camera_up := UpVector (C.camera_transform);
-    widget_size := CalculateWidgetSize (translation);
+    camera_right := RightVector(C.camera_transform);
+    camera_up := UpVector(C.camera_transform);
+    widget_size := CalculateWidgetSize(translation);
 
     style := C.style;
 
-    all_id := GetID ("scale_all");
+    all_id := GetID("scale_all");
     axes_ids := u32.[
-        GetID ("scale_x"),
-        GetID ("scale_y"),
-        GetID ("scale_z"),
+        GetID("scale_x"),
+        GetID("scale_y"),
+        GetID("scale_z"),
         all_id,
     ];
 
@@ -369,11 +369,11 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> Interacti
     if !(flags & .Global_Space)
     {
         for * axes_vectors
-            it.* = transform_vector (model_matrix, it.*);
+            it.* = transform_vector(model_matrix, it.*);
     }
 
     for * local_axes_vectors
-        it.* = transform_vector (model_matrix, it.*);
+        it.* = transform_vector(model_matrix, it.*);
 
     axes_colors := Vec4f.[
         style.colors[StyleColor.X_Axis],
@@ -396,31 +396,31 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> Interacti
         flags & .No_Z_Axis != 0,
     ];
 
-    if !array_find (axes_ids, C.active_id)
-        DrawOrigin (translation);
+    if !array_find(axes_ids, C.active_id)
+        DrawOrigin(translation);
 
     for < i : 2..0
     {
         id := axes_ids[i];
         ignore_axis := ignore_axes[i];
-        ignore_axis ||= C.active_id != id && array_find (axes_ids, C.active_id);
+        ignore_axis ||= C.active_id != id && array_find(axes_ids, C.active_id);
         ignore_axis ||= C.active_id == gizmo_id && C.keyboard_interaction_flags != xx (1 << i);
         if ignore_axis
             continue;
 
         start := translation + widget_size * axes_vectors[i] * C.style.scale_all_inner_circle_size;
         end := translation + widget_size * axes_vectors[i];
-        dim := CalculateDimFactor (translation, axes_vectors[i]);
+        dim := CalculateDimFactor(translation, axes_vectors[i]);
 
         drag_state : InteractionState;
         if !kb_state
         {
-            hovered := dim > 0.1 && IsLineHovered (
+            hovered := dim > 0.1 && IsLineHovered(
                 start, end,
                 C.style.scale_handle_thickness + C.style.line_interaction_threshold
             );
 
-            drag_state = DraggingBehavior (id, hovered, .Scale_Axis, translation);
+            drag_state = DraggingBehavior(id, hovered, .Scale_Axis, translation);
         }
         else if C.keyboard_interaction_flags == xx (1 << i)
         {
@@ -437,33 +437,33 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> Interacti
         {
             if drag_state & .Started
             {
-                C.drag_start_scale = ProjectScale (ThreeAxes.{axes=local_axes_vectors} * scale.*, .{axes=axes_vectors});
+                C.drag_start_scale = ProjectScale(ThreeAxes.{axes=local_axes_vectors} * scale.*, .{axes=axes_vectors});
                 C.drag_start_scale_axis = axes_vectors[i];
             }
 
             end = translation + widget_size * C.drag_start_scale_axis;
 
-            is_behind, proj_center := WorldToScreen (translation);
+            is_behind, proj_center := WorldToScreen(translation);
             if !is_behind
             {
-                t1 := distance (proj_center, C.mouse_drag_start);
-                t2 := distance (proj_center, C.mouse_pos);
+                t1 := distance(proj_center, C.mouse_drag_start);
+                t2 := distance(proj_center, C.mouse_pos);
 
-                if IsKeyDown (.Slow)
+                if IsKeyDown(.Slow)
                     t2 = t1 + (t2 - t1) * C.style.sensitivity_slow_factor;
 
-                s := Sign (C.drag_start_scale.component[i]);
-                center_to_start := normalize (C.mouse_drag_start - proj_center);
-                center_to_curr := normalize (C.mouse_pos - proj_center);
+                s := Sign(C.drag_start_scale.component[i]);
+                center_to_start := normalize(C.mouse_drag_start - proj_center);
+                center_to_curr := normalize(C.mouse_pos - proj_center);
 
-                if dot (center_to_start, center_to_curr) < 0
+                if dot(center_to_start, center_to_curr) < 0
                     s = -s;
 
                 ratio := t2 / t1;
-                additional_scale := s * abs (C.drag_start_scale.component[i]) * ratio - C.drag_start_scale.component[i];
+                additional_scale := s * abs(C.drag_start_scale.component[i]) * ratio - C.drag_start_scale.component[i];
 
-                if IsKeyDown (.Snap)
-                    additional_scale = Snap (additional_scale, C.style.scale_snap_grid_size);
+                if IsKeyDown(.Snap)
+                    additional_scale = Snap(additional_scale, C.style.scale_snap_grid_size);
 
                 scale_axes := ThreeAxes.{
                     axes_vectors[0] * C.drag_start_scale.component[0],
@@ -473,13 +473,13 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> Interacti
                 scale_axes.axes[i] += axes_vectors[i] * additional_scale;
                 scale_on_axis := C.drag_start_scale.component[i] + additional_scale;
 
-                result = ProjectScale (scale_axes, .{axes=local_axes_vectors});
+                result = ProjectScale(scale_axes, .{axes=local_axes_vectors});
 
                 end = translation + widget_size * C.drag_start_scale_axis * s * ratio;
 
                 XYZ :: string.["X","Y","Z"];
-                DrawText (
-                    tprint ("%: %", XYZ[i], scale_on_axis),
+                DrawText(
+                    tprint("%: %", XYZ[i], scale_on_axis),
                     proj_center + .{10, 10},
                     C.style.colors[StyleColor.Text],
                     C.style.colors[StyleColor.Text_Shadow]
@@ -492,7 +492,7 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> Interacti
 
         if drag_state & .Interacting
         {
-            DrawLine (
+            DrawLine(
                 translation - axes_vectors[i] * 500,
                 translation + axes_vectors[i] * 500,
                 axes_guide_colors[i],
@@ -501,15 +501,15 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> Interacti
 
             start = translation;
 
-            DrawCircleFilled (
+            DrawCircleFilled(
                 start,
                 widget_size * C.style.origin_circle_size,
                 color,
-                RightVector (C.camera_transform), UpVector (C.camera_transform)
+                RightVector(C.camera_transform), UpVector(C.camera_transform)
             );
         }
 
-        DrawSquareArrow (
+        DrawSquareArrow(
             start, end,
             color,
             style.scale_handle_thickness,
@@ -519,20 +519,20 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> Interacti
 
     ignore_all := flags & .No_View_Axis != 0;
     ignore_all ||= C.active_id == gizmo_id && C.keyboard_interaction_flags != 0;
-    ignore_all ||= C.active_id != all_id && array_find (axes_ids, C.active_id);
+    ignore_all ||= C.active_id != all_id && array_find(axes_ids, C.active_id);
 
     if !ignore_all
     {
         drag_state : InteractionState;
         if !kb_state
         {
-            hovered := IsCircleFilledHovered (
+            hovered := IsCircleFilledHovered(
                 translation,
                 -camera_forward,
                 widget_size * C.style.scale_all_outer_circle_size
             );
 
-            drag_state = DraggingBehavior (all_id, hovered, .Scale_All, translation);
+            drag_state = DraggingBehavior(all_id, hovered, .Scale_All, translation);
         }
         else if C.keyboard_interaction_flags == 0
         {
@@ -553,50 +553,50 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> Interacti
                 C.drag_start_scale_axis = .{1,1,1};
             }
 
-            is_behind, proj_center := WorldToScreen (translation);
+            is_behind, proj_center := WorldToScreen(translation);
             if !is_behind
             {
-                t1 := distance (proj_center, C.mouse_drag_start);
-                t2 := distance (proj_center, C.mouse_pos);
+                t1 := distance(proj_center, C.mouse_drag_start);
+                t2 := distance(proj_center, C.mouse_pos);
 
-                if IsKeyDown (.Slow)
+                if IsKeyDown(.Slow)
                     t2 = t1 + (t2 - t1) * C.style.sensitivity_slow_factor;
 
                 s := Vec3f.{
-                    Sign (C.drag_start_scale.x),
-                    Sign (C.drag_start_scale.y),
-                    Sign (C.drag_start_scale.z),
+                    Sign(C.drag_start_scale.x),
+                    Sign(C.drag_start_scale.y),
+                    Sign(C.drag_start_scale.z),
                 };
 
-                center_to_start := normalize (C.mouse_drag_start - proj_center);
-                center_to_curr := normalize (C.mouse_pos - proj_center);
+                center_to_start := normalize(C.mouse_drag_start - proj_center);
+                center_to_curr := normalize(C.mouse_pos - proj_center);
 
-                if dot (center_to_start, center_to_curr) < 0
+                if dot(center_to_start, center_to_curr) < 0
                     s = -s;
 
                 widget_size *= t2 / t1;
 
                 ratio := t2 / t1;
-                additional_scale := s * abs (C.drag_start_scale) * ratio - C.drag_start_scale;
+                additional_scale := s * abs(C.drag_start_scale) * ratio - C.drag_start_scale;
 
-                if IsKeyDown (.Snap)
+                if IsKeyDown(.Snap)
                 {
-                    additional_scale.x = Snap (additional_scale.x, C.style.scale_snap_grid_size);
-                    additional_scale.y = Snap (additional_scale.y, C.style.scale_snap_grid_size);
-                    additional_scale.z = Snap (additional_scale.z, C.style.scale_snap_grid_size);
+                    additional_scale.x = Snap(additional_scale.x, C.style.scale_snap_grid_size);
+                    additional_scale.y = Snap(additional_scale.y, C.style.scale_snap_grid_size);
+                    additional_scale.z = Snap(additional_scale.z, C.style.scale_snap_grid_size);
                 }
 
                 result = C.drag_start_scale + additional_scale;
 
-                if IsKeyDown (.Snap)
+                if IsKeyDown(.Snap)
                 {
-                    result.x = Snap (result.x, C.style.scale_snap_grid_size);
-                    result.y = Snap (result.y, C.style.scale_snap_grid_size);
-                    result.z = Snap (result.z, C.style.scale_snap_grid_size);
+                    result.x = Snap(result.x, C.style.scale_snap_grid_size);
+                    result.y = Snap(result.y, C.style.scale_snap_grid_size);
+                    result.z = Snap(result.z, C.style.scale_snap_grid_size);
                 }
 
-                DrawText (
-                    tprint ("X: % Y: % Z: %", result.x, result.y, result.z),
+                DrawText(
+                    tprint("X: % Y: % Z: %", result.x, result.y, result.z),
                     proj_center + .{10, 10},
                     C.style.colors[StyleColor.Text],
                     C.style.colors[StyleColor.Text_Shadow]
@@ -608,24 +608,24 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> Interacti
             then C.style.colors[StyleColor.View_Axis_Active]
             else C.style.colors[StyleColor.View_Axis];
 
-        DrawCircle (
+        DrawCircle(
             translation,
             widget_size * C.style.scale_all_inner_circle_size,
             color,
             C.style.scale_all_handle_thickness,
-            RightVector (C.camera_transform),
-            UpVector (C.camera_transform)
+            RightVector(C.camera_transform),
+            UpVector(C.camera_transform)
         );
 
         if C.active_id != gizmo_id && C.active_id != all_id
         {
-            DrawCircle (
+            DrawCircle(
                 translation,
                 widget_size * C.style.scale_all_outer_circle_size,
                 color,
                 C.style.scale_all_handle_thickness,
-                RightVector (C.camera_transform),
-                UpVector (C.camera_transform)
+                RightVector(C.camera_transform),
+                UpVector(C.camera_transform)
             );
         }
     }
@@ -635,16 +635,16 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> Interacti
 
 GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> InteractionState
 {
-    C := GetContext ();
+    C := GetContext();
 
     if flags & .No_Rotation
         return 0;
 
-    matrix := GetGizmoMatrix ();
-    translation := TranslationVector (matrix);
+    matrix := GetGizmoMatrix();
+    translation := TranslationVector(matrix);
 
-    gizmo_id := GetID (id);
-    kb_state := KeyboardBehavior (gizmo_id, .Rotate, translation);
+    gizmo_id := GetID(id);
+    kb_state := KeyboardBehavior(gizmo_id, .Rotate, translation);
 
     if kb_state & .Cancelled
         rotation.* = C.drag_start_rotation;
@@ -656,20 +656,20 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> Int
     result := rotation.*;
     defer rotation.* = result;
 
-    PushID (id);
-    defer PopID ();
+    PushID(id);
+    defer PopID();
 
     camera_forward := ForwardVector (C.camera_transform);
-    camera_right := RightVector (C.camera_transform);
-    camera_up := UpVector (C.camera_transform);
-    widget_size := CalculateWidgetSize (translation);
+    camera_right := RightVector(C.camera_transform);
+    camera_up := UpVector(C.camera_transform);
+    widget_size := CalculateWidgetSize(translation);
 
-    trackball_id := GetID ("rotate_trackball");
+    trackball_id := GetID("rotate_trackball");
     axes_ids := u32.[
-        GetID ("rotate_x"),
-        GetID ("rotate_y"),
-        GetID ("rotate_z"),
-        GetID ("rotate_view"),
+        GetID("rotate_x"),
+        GetID("rotate_y"),
+        GetID("rotate_z"),
+        GetID("rotate_view"),
         trackball_id,
     ];
 
@@ -683,7 +683,7 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> Int
     if !(flags & .Global_Space)
     {
         for i : 0..2
-            axes_vectors[i] = rotate (axes_vectors[i], rotation.*);
+            axes_vectors[i] = rotate(axes_vectors[i], rotation.*);
     }
 
     axes_colors := Vec4f.[
@@ -711,8 +711,8 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> Int
         flags & .No_View_Axis != 0,
     ];
 
-    if C.active_id != gizmo_id && !array_find (axes_ids, C.active_id)
-        DrawOrigin (translation);
+    if C.active_id != gizmo_id && !array_find(axes_ids, C.active_id)
+        DrawOrigin(translation);
 
     for < i : 3..0
     {
@@ -723,7 +723,7 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> Int
         id := axes_ids[i];
         ignore_axis := ignore_axes[i];
         ignore_axis ||= C.active_id == gizmo_id && C.keyboard_interaction_flags != keyboard_flags;
-        ignore_axis ||= C.active_id != id && array_find (axes_ids, C.active_id);
+        ignore_axis ||= C.active_id != id && array_find(axes_ids, C.active_id);
 
         if ignore_axis
             continue;
@@ -734,8 +734,8 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> Int
         thickness : float;
         if i == 3
         {
-            tangent = RightVector (C.camera_transform);
-            bitangent = UpVector (C.camera_transform);
+            tangent = RightVector(C.camera_transform);
+            bitangent = UpVector(C.camera_transform);
             radius = widget_size * C.style.rotation_view_axis_size;
             thickness = C.style.rotation_view_axis_thickness;
         }
@@ -750,14 +750,14 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> Int
         drag_state : InteractionState;
         if !kb_state
         {
-            hovered := IsFacingCircleHovered (
+            hovered := IsFacingCircleHovered(
                 translation,
                 radius,
                 thickness + ifx i == 3 then C.style.line_interaction_threshold,
                 tangent, bitangent
             );
 
-            drag_state = DraggingBehavior (id, hovered, .Rotation_Axis, translation);
+            drag_state = DraggingBehavior(id, hovered, .Rotation_Axis, translation);
         }
         else if C.keyboard_interaction_flags == keyboard_flags
         {
@@ -779,59 +779,59 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> Int
             }
 
             origin := translation;
-            ray_origin, ray_dir := RayFromMouse ();
-            intersects, point := RayIntersectsPlane (ray_origin, ray_dir, origin, C.drag_start_rotation_axis);
+            ray_origin, ray_dir := RayFromMouse();
+            intersects, point := RayIntersectsPlane(ray_origin, ray_dir, origin, C.drag_start_rotation_axis);
             if drag_state & .Started
             {
                 C.drag_start_rotation_point = point;
             }
 
-            is_behind, proj_center := WorldToScreen (translation);
+            is_behind, proj_center := WorldToScreen(translation);
             if !is_behind
             {
-                begin := normalize (proj_center - C.mouse_drag_start);
-                end := normalize (proj_center - C.mouse_pos);
-                s := ifx dot (camera_forward, axis) < 0 then -1.0 else 1.0;
-                angle := SignedAngle (Vec3f.{xy=begin,z=0}, Vec3f.{xy=end,z=0}, .{0,0,-s});
+                begin := normalize(proj_center - C.mouse_drag_start);
+                end := normalize(proj_center - C.mouse_pos);
+                s := ifx dot(camera_forward, axis) < 0 then -1.0 else 1.0;
+                angle := SignedAngle(Vec3f.{xy=begin,z=0}, Vec3f.{xy=end,z=0}, .{0,0,-s});
 
-                if IsKeyDown (.Slow)
+                if IsKeyDown(.Slow)
                     angle *= C.style.sensitivity_slow_factor;
 
-                if IsKeyDown (.Snap)
-                    angle = Snap (angle, C.style.rotation_snap_grid_size);
+                if IsKeyDown(.Snap)
+                    angle = Snap(angle, C.style.rotation_snap_grid_size);
 
                 rotated : Quatf;
-                set_from_axis_and_angle (*rotated, C.drag_start_rotation_axis, angle);
+                set_from_axis_and_angle(*rotated, C.drag_start_rotation_axis, angle);
 
                 result = rotated * C.drag_start_rotation;
-                normalize_or_identity (*result);
+                normalize_or_identity(*result);
 
-                rotation_start_dir := normalize (C.drag_start_rotation_point - translation);
-                DrawSemiCircleFilled (
+                rotation_start_dir := normalize(C.drag_start_rotation_point - translation);
+                DrawSemiCircleFilled(
                     translation,
                     radius,
                     axes_guide_colors[i] * .{1,1,1,0.3},
                     tangent, bitangent,
-                    SignedAngle (tangent, rotation_start_dir, C.drag_start_rotation_axis), -angle
+                    SignedAngle(tangent, rotation_start_dir, C.drag_start_rotation_axis), -angle
                 );
 
-                DrawLine (
+                DrawLine(
                     translation,
                     translation + rotation_start_dir * radius,
                     axes_active_colors[i],
                     C.style.guide_line_thickness
                 );
 
-                DrawLine (
+                DrawLine(
                     translation,
-                    translation + rotate (rotation_start_dir, rotated) * radius,
+                    translation + rotate(rotation_start_dir, rotated) * radius,
                     axes_active_colors[i],
                     thickness
                 );
 
-                _, angle_text_pos := WorldToScreen (translation + rotation_start_dir * radius * 1.2);
-                DrawText (
-                    tprint ("% deg", angle * 180 / PI),
+                _, angle_text_pos := WorldToScreen(translation + rotation_start_dir * radius * 1.2);
+                DrawText(
+                    tprint("% deg", angle * 180 / PI),
                     angle_text_pos,
                     C.style.colors[StyleColor.Text],
                     C.style.colors[StyleColor.Text_Shadow]
@@ -844,7 +844,7 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> Int
 
         if drag_state & .Interacting
         {
-            DrawCircle (
+            DrawCircle(
                 translation,
                 radius,
                 color,
@@ -854,7 +854,7 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> Int
         }
         else
         {
-            DrawFacingCircle (
+            DrawFacingCircle(
                 translation,
                 radius,
                 color,
@@ -866,12 +866,12 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> Int
 
     ignore_trackball := (flags & .No_Trackball) != 0;
     ignore_trackball ||= C.active_id == gizmo_id;
-    ignore_trackball ||= C.active_id != trackball_id && array_find (axes_ids, C.active_id);
+    ignore_trackball ||= C.active_id != trackball_id && array_find(axes_ids, C.active_id);
 
     if !ignore_trackball
     {
-        hovered := IsCircleFilledHovered (translation, camera_forward, widget_size);
-        drag_state := DraggingBehavior (trackball_id, hovered, .Rotation_Trackball, translation);
+        hovered := IsCircleFilledHovered(translation, camera_forward, widget_size);
+        drag_state := DraggingBehavior(trackball_id, hovered, .Rotation_Trackball, translation);
         if drag_state
             result_state = drag_state;
 
@@ -885,16 +885,16 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> Int
                 C.drag_start_rotation = rotation.*;
             }
 
-            camera_rotation := get_rotation (C.camera_view);
-            start_axis := Project2DPointOn3DSphere (C.mouse_drag_start, translation, widget_size);
-            start_axis = normalize (start_axis);
-            start_axis = rotate (start_axis, camera_rotation);
+            camera_rotation := get_rotation(C.camera_view);
+            start_axis := Project2DPointOn3DSphere(C.mouse_drag_start, translation, widget_size);
+            start_axis = normalize(start_axis);
+            start_axis = rotate(start_axis, camera_rotation);
 
-            curr_axis := Project2DPointOn3DSphere (C.mouse_pos, translation, widget_size);
-            curr_axis = normalize (curr_axis);
-            curr_axis = rotate (curr_axis, camera_rotation);
+            curr_axis := Project2DPointOn3DSphere(C.mouse_pos, translation, widget_size);
+            curr_axis = normalize(curr_axis);
+            curr_axis = rotate(curr_axis, camera_rotation);
 
-            result = C.drag_start_rotation * QuatfFromVectorToVector (start_axis, curr_axis);
+            result = C.drag_start_rotation * QuatfFromVectorToVector(start_axis, curr_axis);
         }
 
         trackball_color := ifx C.hovered_id == trackball_id || C.active_id == trackball_id
@@ -903,30 +903,30 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> Int
 
         if !(drag_state & .Interacting)
         {
-            DrawCircleFilled (
+            DrawCircleFilled(
                 translation,
                 widget_size,
                 trackball_color,
-                RightVector (C.camera_transform), UpVector (C.camera_transform)
+                RightVector(C.camera_transform), UpVector(C.camera_transform)
             );
         }
         else
         {
-            DrawFacingCircle (
+            DrawFacingCircle(
                 translation,
                 widget_size,
                 C.style.colors[StyleColor.Z_Axis],
                 C.style.rotation_handle_thickness,
                 axes_vectors[0], axes_vectors[1]
             );
-            DrawFacingCircle (
+            DrawFacingCircle(
                 translation,
                 widget_size,
                 C.style.colors[StyleColor.Y_Axis],
                 C.style.rotation_handle_thickness,
                 axes_vectors[2], axes_vectors[0]
             );
-            DrawFacingCircle (
+            DrawFacingCircle(
                 translation,
                 widget_size,
                 C.style.colors[StyleColor.X_Axis],
@@ -948,26 +948,26 @@ GizmoTransform :: (
     flags : GizmoFlags = 0
 ) -> InteractionState
 {
-    C := GetContext ();
+    C := GetContext();
 
-    parent := GetGizmoMatrix ();
-    inv_parent := inverse (parent);
+    parent := GetGizmoMatrix();
+    inv_parent := inverse(parent);
 
-    matrix := make_translation_matrix4 (translation.*)
-        * rotation_matrix (Mat4f, rotation.*)
-        * make_scale_matrix4 (scale.*);
+    matrix := make_translation_matrix4(translation.*)
+        * rotation_matrix(Mat4f, rotation.*)
+        * make_scale_matrix4(scale.*);
 
-    PushGizmoMatrix (matrix);
-    defer PopGizmoMatrix ();
+    PushGizmoMatrix(matrix);
+    defer PopGizmoMatrix();
 
-    gizmo_id := GetID (id);
+    gizmo_id := GetID(id);
     if C.keyboard_focus_id == gizmo_id && C.active_id == 0
     {
-        if IsKeyPressed (.Translate)
+        if IsKeyPressed(.Translate)
             type = .Translate;
-        if IsKeyPressed (.Rotate)
+        if IsKeyPressed(.Rotate)
             type = .Rotate;
-        if IsKeyPressed (.Scale)
+        if IsKeyPressed(.Scale)
             type = .Scale;
     }
 
@@ -987,27 +987,27 @@ GizmoTransform :: (
     if #complete type ==
     {
     case .Translate;
-        translation.* = transform_point (parent, translation.*);
-        defer translation.* = transform_point (inv_parent, translation.*);
+        translation.* = transform_point(parent, translation.*);
+        defer translation.* = transform_point(inv_parent, translation.*);
 
-        return GizmoTranslation (id, translation, flags);
+        return GizmoTranslation(id, translation, flags);
 
     case .Rotate;
         // Transform the quaternion to global space first
         // Transform back to local space afterwards
-        q := QuatfFromMatrix (parent);
-        inv_q := conjugate (q);
+        q := QuatfFromMatrix(parent);
+        inv_q := conjugate(q);
         rotation.* = q * rotation.*;
         defer rotation.* = inv_q * rotation.*;
 
-        return GizmoRotation (id, rotation, flags);
+        return GizmoRotation(id, rotation, flags);
 
     case .Scale;
-        return GizmoScale (id, scale, flags);
+        return GizmoScale(id, scale, flags);
 
     case .None;
-        translation := TranslationVector (GetGizmoMatrix ());
-        DrawOrigin (translation);
+        translation := TranslationVector(GetGizmoMatrix());
+        DrawOrigin(translation);
     }
 
     return 0;

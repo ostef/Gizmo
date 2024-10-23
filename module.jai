@@ -256,77 +256,77 @@ g_gizmo_context : *GizmoContext;
 
 CreateContext :: ()
 {
-    g_gizmo_context = New (GizmoContext);
-    InitDefaultColors (*g_gizmo_context.style);
+    g_gizmo_context = New(GizmoContext);
+    InitDefaultColors(*g_gizmo_context.style);
 }
 
 DestroyContext :: ()
 {
-    assert (g_gizmo_context != null, "Gizmo context not created");
+    assert(g_gizmo_context != null, "Gizmo context not created");
 
-    array_reset (*g_gizmo_context.id_stack);
-    array_reset (*g_gizmo_context.matrix_stack);
-    array_reset (*g_gizmo_context.draw_vertices);
-    array_reset (*g_gizmo_context.text_buffer);
-    array_reset (*g_gizmo_context.texts_to_draw);
+    array_reset(*g_gizmo_context.id_stack);
+    array_reset(*g_gizmo_context.matrix_stack);
+    array_reset(*g_gizmo_context.draw_vertices);
+    array_reset(*g_gizmo_context.text_buffer);
+    array_reset(*g_gizmo_context.texts_to_draw);
     g_gizmo_context = null;
 }
 
 GetStyle :: inline () -> *Style #must
 {
-    return *GetContext ().style;
+    return *GetContext().style;
 }
 
 GetContext :: inline () -> *GizmoContext #must
 {
-    assert (g_gizmo_context != null, "Gizmo context not created");
+    assert(g_gizmo_context != null, "Gizmo context not created");
 
     return g_gizmo_context;
 }
 
 ClearKeyStates :: inline ()
 {
-    C := GetContext ();
+    C := GetContext();
 
-    memset (C.key_states.data, 0, size_of (type_of (C.key_states)));
+    memset(C.key_states.data, 0, size_of(type_of(C.key_states)));
 }
 
 SetKeyState :: inline (key : Key, state : bool)
 {
-    C := GetContext ();
+    C := GetContext();
 
     C.key_states[key] = state;
 }
 
 IsKeyDown :: inline (key : Key) -> bool #must
 {
-    C := GetContext ();
+    C := GetContext();
 
     return C.key_states[key];
 }
 
 IsKeyPressed :: inline (key : Key) -> bool #must
 {
-    C := GetContext ();
+    C := GetContext();
 
     return !C.prev_key_states[key] && C.key_states[key];
 }
 
 IsKeyReleased :: inline (key : Key) -> bool #must
 {
-    C := GetContext ();
+    C := GetContext();
 
     return C.prev_key_states[key] && !C.key_states[key];
 }
 
 SetKeyboardFocus :: inline (id : string)
 {
-    SetKeyboardFocus (GetID (id));
+    SetKeyboardFocus(GetID(id));
 }
 
 SetKeyboardFocus :: inline (id : u32)
 {
-    C := GetContext ();
+    C := GetContext();
 
     C.keyboard_focus_id = id;
     C.next_keyboard_focus_id = id;
@@ -339,14 +339,14 @@ SetCamera :: (
     near : float, far : float
 )
 {
-    C := GetContext ();
+    C := GetContext();
     C.persp_projection = persp_projection;
-    C.inv_persp_projection = inverse (persp_projection);
+    C.inv_persp_projection = inverse(persp_projection);
     C.ortho_projection = ortho_projection;
-    C.inv_ortho_projection = inverse (ortho_projection);
+    C.inv_ortho_projection = inverse(ortho_projection);
     C.view_persp_projection = persp_projection * view;
     C.camera_view = view;
-    C.camera_transform = inverse (view);
+    C.camera_transform = inverse(view);
     C.camera_near = near;
     C.camera_far = far;
 }
@@ -357,7 +357,7 @@ NewFrame :: (
     mouse_pos : Vec2f
 )
 {
-    C := GetContext ();
+    C := GetContext();
     C.hovered_id = 0;
     C.active_id = C.next_active_id;
     C.next_active_id = 0;
@@ -390,11 +390,11 @@ EndFrame :: ()
 {
     DrawCursorArrow :: (center : Vec2f, dir : Vec2f)
     {
-        C := GetContext ();
+        C := GetContext();
 
         size := C.style.cursor_indicator_size;
 
-        DrawArrow2D (
+        DrawArrow2D(
             center + dir * size * 0.2,
             center + dir * size * 0.5,
             C.style.colors[StyleColor.Cursor],
@@ -403,30 +403,30 @@ EndFrame :: ()
         );
     }
 
-    C := GetContext ();
+    C := GetContext();
 
-    memcpy (C.prev_key_states.data, C.key_states.data, size_of (type_of (C.key_states)));
+    memcpy(C.prev_key_states.data, C.key_states.data, size_of(type_of(C.key_states)));
 
     // Draw cursor
-    is_behind, active_center := WorldToScreen (C.active_translation);
+    is_behind, active_center := WorldToScreen(C.active_translation);
     if is_behind
     {
-        dir := normalize (C.mouse_pos - active_center);
+        dir := normalize(C.mouse_pos - active_center);
 
         if C.active_interaction ==
         {
         case .Translation_Axis; #through;
         case .Translation_Plane;
-            DrawCursorArrow (C.mouse_pos, .{1,0});
-            DrawCursorArrow (C.mouse_pos, .{-1,0});
-            DrawCursorArrow (C.mouse_pos, .{0,1});
-            DrawCursorArrow (C.mouse_pos, .{0,-1});
+            DrawCursorArrow(C.mouse_pos, .{1,0});
+            DrawCursorArrow(C.mouse_pos, .{-1,0});
+            DrawCursorArrow(C.mouse_pos, .{0,1});
+            DrawCursorArrow(C.mouse_pos, .{0,-1});
             C.wants_to_hide_cursor = true;
 
         case .Scale_Axis; #through;
         case .Scale_Plane; #through;
         case .Scale_All;
-            DrawDashedLine2D (
+            DrawDashedLine2D(
                 active_center, C.mouse_pos,
                 C.style.cursor_line_dash_length,
                 C.style.cursor_line_dash_spacing,
@@ -434,12 +434,12 @@ EndFrame :: ()
                 C.style.cursor_line_thickness
             );
 
-            DrawCursorArrow (C.mouse_pos, -dir);
-            DrawCursorArrow (C.mouse_pos, dir);
+            DrawCursorArrow(C.mouse_pos, -dir);
+            DrawCursorArrow(C.mouse_pos, dir);
             C.wants_to_hide_cursor = true;
 
         case .Rotation_Axis;
-            DrawDashedLine2D (
+            DrawDashedLine2D(
                 active_center, C.mouse_pos,
                 C.style.cursor_line_dash_length,
                 C.style.cursor_line_dash_spacing,
@@ -447,15 +447,15 @@ EndFrame :: ()
                 C.style.cursor_line_thickness
             );
 
-            DrawCursorArrow (C.mouse_pos, PerpendicularCW (dir));
-            DrawCursorArrow (C.mouse_pos, PerpendicularCCW (dir));
+            DrawCursorArrow(C.mouse_pos, PerpendicularCW(dir));
+            DrawCursorArrow(C.mouse_pos, PerpendicularCCW(dir));
             C.wants_to_hide_cursor = true;
 
         case .Rotation_Trackball;
-            DrawCursorArrow (C.mouse_pos, .{1,0});
-            DrawCursorArrow (C.mouse_pos, .{-1,0});
-            DrawCursorArrow (C.mouse_pos, .{0,1});
-            DrawCursorArrow (C.mouse_pos, .{0,-1});
+            DrawCursorArrow(C.mouse_pos, .{1,0});
+            DrawCursorArrow(C.mouse_pos, .{-1,0});
+            DrawCursorArrow(C.mouse_pos, .{0,1});
+            DrawCursorArrow(C.mouse_pos, .{0,-1});
             C.wants_to_hide_cursor = true;
 
         case;
@@ -466,38 +466,38 @@ EndFrame :: ()
 
 GetID :: (str : string, hash_with_id_stack := true) -> u32 #must
 {
-    C := GetContext ();
-    id := get_hash (str);
+    C := GetContext();
+    id := get_hash(str);
 
     if hash_with_id_stack && C.id_stack.count > 0
-        id = get_hash (id, C.id_stack[C.id_stack.count - 1]);
+        id = get_hash(id, C.id_stack[C.id_stack.count - 1]);
 
     return id;
 }
 
 PushID :: (str : string, hash_with_id_stack := true)
 {
-    PushID (GetID (str, false), hash_with_id_stack);
+    PushID(GetID(str, false), hash_with_id_stack);
 }
 
 PushID :: (id : u32, hash_with_id_stack := true)
 {
-    C := GetContext ();
+    C := GetContext();
     if hash_with_id_stack && C.id_stack.count > 0
-        id = get_hash (id, C.id_stack[C.id_stack.count - 1]);
+        id = get_hash(id, C.id_stack[C.id_stack.count - 1]);
 
-    array_add (*C.id_stack, id);
+    array_add(*C.id_stack, id);
 }
 
 PopID :: ()
 {
-    C := GetContext ();
-    pop (*C.id_stack);
+    C := GetContext();
+    pop(*C.id_stack);
 }
 
 GetGizmoMatrix :: (peek := 0) -> Mat4f #must
 {
-    C := GetContext ();
+    C := GetContext();
 
     if peek < C.matrix_stack.count
         return C.matrix_stack[C.matrix_stack.count - 1 - peek];
@@ -507,31 +507,31 @@ GetGizmoMatrix :: (peek := 0) -> Mat4f #must
 
 PushGizmoMatrix :: (mat : Mat4f, apply_previous_matrix := true)
 {
-    C := GetContext ();
+    C := GetContext();
 
     m := mat;
     if C.matrix_stack.count > 0 && apply_previous_matrix
         m = C.matrix_stack[C.matrix_stack.count - 1] * mat;
 
-    array_add (*C.matrix_stack, m);
+    array_add(*C.matrix_stack, m);
 }
 
 PopGizmoMatrix :: ()
 {
-    C := GetContext ();
-    pop (*C.matrix_stack);
+    C := GetContext();
+    pop(*C.matrix_stack);
 }
 
 DraggingBehavior :: (id : u32, hovered : bool, interaction : GizmoInteractionType, translation : Vec3f) -> InteractionState
 {
-    C := GetContext ();
+    C := GetContext();
 
     state : InteractionState;
 
     if C.active_id == 0 && C.hovered_id == 0 && hovered
         C.hovered_id = id;
 
-    if C.hovered_id == id && IsKeyPressed (.Interact)
+    if C.hovered_id == id && IsKeyPressed(.Interact)
     {
         C.active_id = id;
         C.next_active_id = id;
@@ -543,12 +543,12 @@ DraggingBehavior :: (id : u32, hovered : bool, interaction : GizmoInteractionTyp
 
     if C.active_id == id
     {
-        if !(state & .Started) && IsKeyPressed (.Cancel)
+        if !(state & .Started) && IsKeyPressed(.Cancel)
         {
             C.active_id = 0;
             state |= .Cancelled;
         }
-        else if IsKeyDown (.Interact)
+        else if IsKeyDown(.Interact)
         {
             state |= .Interacting;
             C.next_active_id = id;
@@ -567,7 +567,7 @@ DraggingBehavior :: (id : u32, hovered : bool, interaction : GizmoInteractionTyp
 
 KeyboardBehavior :: (id : u32, type : KeyboardInteractionType, translation : Vec3f) -> InteractionState
 {
-    C := GetContext ();
+    C := GetContext();
 
     if C.keyboard_focus_id != id
         return 0;
@@ -577,7 +577,7 @@ KeyboardBehavior :: (id : u32, type : KeyboardInteractionType, translation : Vec
     if C.active_id != 0 && C.active_id != id
         return 0;
 
-    if C.keyboard_interaction == type && IsKeyPressed (.Submit)
+    if C.keyboard_interaction == type && IsKeyPressed(.Submit)
     {
         C.next_active_id = 0;
         return .Submitted;
@@ -586,21 +586,21 @@ KeyboardBehavior :: (id : u32, type : KeyboardInteractionType, translation : Vec
     state : InteractionState;
     if C.keyboard_interaction != type
     {
-        if type == .Translate && IsKeyPressed (.Translate)
+        if type == .Translate && IsKeyPressed(.Translate)
         {
             C.keyboard_interaction = .Translate;
             C.mouse_drag_start = C.mouse_pos;
             state |= .Started;
         }
 
-        if type == .Scale && IsKeyPressed (.Scale)
+        if type == .Scale && IsKeyPressed(.Scale)
         {
             C.keyboard_interaction = .Scale;
             C.mouse_drag_start = C.mouse_pos;
             state |= .Started;
         }
 
-        if type == .Rotate && IsKeyPressed (.Rotate)
+        if type == .Rotate && IsKeyPressed(.Rotate)
         {
             C.keyboard_interaction = .Rotate;
             C.mouse_drag_start = C.mouse_pos;
@@ -608,7 +608,7 @@ KeyboardBehavior :: (id : u32, type : KeyboardInteractionType, translation : Vec
         }
     }
 
-    if C.keyboard_interaction == type && !(state & .Started) && IsKeyPressed (.Cancel)
+    if C.keyboard_interaction == type && !(state & .Started) && IsKeyPressed(.Cancel)
     {
         C.next_active_id = 0;
         return .Cancelled;
@@ -622,8 +622,8 @@ KeyboardBehavior :: (id : u32, type : KeyboardInteractionType, translation : Vec
         C.next_active_id = id;
         C.active_translation = translation;
 
-        exclude := IsKeyDown (.Exclude);
-        if IsKeyPressed (.X_Axis)
+        exclude := IsKeyDown(.Exclude);
+        if IsKeyPressed(.X_Axis)
         {
             if exclude
                 C.keyboard_interaction_flags = .Y_Axis | .Z_Axis;
@@ -635,7 +635,7 @@ KeyboardBehavior :: (id : u32, type : KeyboardInteractionType, translation : Vec
             state |= .Started;
             state |= .Cancelled;
         }
-        else if IsKeyPressed (.Y_Axis)
+        else if IsKeyPressed(.Y_Axis)
         {
             if exclude
                 C.keyboard_interaction_flags = .X_Axis | .Z_Axis;
@@ -647,7 +647,7 @@ KeyboardBehavior :: (id : u32, type : KeyboardInteractionType, translation : Vec
             state |= .Started;
             state |= .Cancelled;
         }
-        else if IsKeyPressed (.Z_Axis)
+        else if IsKeyPressed(.Z_Axis)
         {
             if exclude
                 C.keyboard_interaction_flags = .X_Axis | .Y_Axis;
