@@ -10,9 +10,9 @@ main :: ()
 {
     // Window and GL context creation
 
-    Gizmo.CreateContext ();
-    defer Gizmo.DestroyContext ();
-    defer Gizmo_GL.Cleanup ();
+    Gizmo.CreateContext();
+    defer Gizmo.DestroyContext();
+    defer Gizmo_GL.Cleanup();
 
     transform : Matrix4;
     translation : Vector3;
@@ -20,10 +20,10 @@ main :: ()
     {
         // Poll window events
 
-        Gizmo.SetKeyState (.Interact, IsMouseButtonDown (.Left));
-        Gizmo.SetKeyState (.Cancel, IsKeyDown (.Escape));
+        Gizmo.SetKeyState(.Interact, IsMouseButtonDown(.Left));
+        Gizmo.SetKeyState(.Cancel, IsKeyDown(.Escape));
 
-        Gizmo.NewFrame (
+        Gizmo.NewFrame(
             display_size,
             mouse_position,
             perspective_projection,
@@ -33,17 +33,17 @@ main :: ()
             view_far
         );
 
-        if Gizmo.GizmoTranslation ("translate", *translation)
+        if Gizmo.GizmoTranslation("translate", *translation)
         {
-            transform = make_translation_matrix4 (translation);
+            transform = make_translation_matrix4(translation);
         }
 
-        Gizmo.EndFrame ();
+        Gizmo.EndFrame();
 
-        glViewport (0, 0, xx display_size.x, xx display_size.y);
-        glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glViewport(0, 0, xx display_size.x, xx display_size.y);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        Gizmo_GL.RenderDrawData ();
+        Gizmo_GL.RenderDrawData();
 
         // Swap buffers
     }
