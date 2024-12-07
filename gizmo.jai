@@ -183,7 +183,7 @@ GizmoTranslation :: (id : string, translation : *Vec3f, flags : GizmoFlags = 0) 
         );
     }
 
-    for < i : 2..0
+    for #v2 < i : 0..2
     {
         id := axes_ids[i];
         ignore_axis := ignore_axes[i];
@@ -399,7 +399,7 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> Interacti
     if !array_find(axes_ids, C.active_id)
         DrawOrigin(translation);
 
-    for < i : 2..0
+    for #v2 < i : 0..2
     {
         id := axes_ids[i];
         ignore_axis := ignore_axes[i];
@@ -714,7 +714,7 @@ GizmoRotation :: (id : string, rotation : *Quatf, flags : GizmoFlags = 0) -> Int
     if C.active_id != gizmo_id && !array_find(axes_ids, C.active_id)
         DrawOrigin(translation);
 
-    for < i : 3..0
+    for #v2 < i : 0..3
     {
         keyboard_flags : KeyboardInteractionFlags;
         if i != 3
