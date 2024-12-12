@@ -13,30 +13,30 @@ RendererData :: struct
 Vertex_Shader :: #string GLSL
 #version 330 core
 
-layout(location = 0) in vec3 a_Position;
-layout(location = 1) in vec4 a_Color;
+layout(location = 0) in vec3 in_position;
+layout(location = 1) in vec4 in_color;
 
 uniform mat4 u_projection_matrix;
 
-out vec4 Color;
+out vec4 color;
 
 void main()
 {
-    Color = a_Color;
-    gl_Position = u_projection_matrix * vec4(a_Position, 1);
+    color = in_color;
+    gl_Position = u_projection_matrix * vec4(in_position, 1);
 }
 GLSL
 
 Fragment_Shader :: #string GLSL
 #version 330 core
 
-in vec4 Color;
+in vec4 color;
 
-out vec4 Frag_Color;
+out vec4 frag_color;
 
 void main()
 {
-    Frag_Color = Color;
+    frag_color = color;
 }
 GLSL
 
