@@ -16,14 +16,14 @@ Vertex_Shader :: #string GLSL
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec4 a_Color;
 
-uniform mat4 u_Projection_Matrix;
+uniform mat4 u_projection_matrix;
 
 out vec4 Color;
 
 void main()
 {
     Color = a_Color;
-    gl_Position = u_Projection_Matrix * vec4(a_Position, 1);
+    gl_Position = u_projection_matrix * vec4(a_Position, 1);
 }
 GLSL
 
@@ -127,7 +127,7 @@ RenderDrawData :: ()
         glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, size_of(Gizmo.DrawVertex), cast(*void) size_of(Gizmo.Vec3f));
 
         R.shader = CreateShader();
-        R.proj_location = glGetUniformLocation(R.shader, "u_Projection_Matrix");
+        R.proj_location = glGetUniformLocation(R.shader, "u_projection_matrix");
     }
 
     R := cast(*RendererData) C.renderer;
