@@ -166,6 +166,7 @@ RenderDrawData :: ()
     glViewport(0, 0, xx C.framebuffer_size.x, xx C.framebuffer_size.y);
 
     glUseProgram(R.shader);
+    defer glUseProgram(0);
 
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
