@@ -1,26 +1,26 @@
-IsFinite :: inline (val : float) -> bool #must
+IsFinite :: inline (val : float) -> bool
 {
     nan, inf := is_nan_is_inf(val);
 
     return !nan && !inf;
 }
 
-IsFinite :: inline (val : Vec2f) -> bool #must
+IsFinite :: inline (val : Vec2f) -> bool
 {
     return IsFinite(val.x) && IsFinite(val.y);
 }
 
-IsFinite :: inline (val : Vec3f) -> bool #must
+IsFinite :: inline (val : Vec3f) -> bool
 {
     return IsFinite(val.x) && IsFinite(val.y) && IsFinite(val.z);
 }
 
-IsFinite :: inline (val : Vec4f) -> bool #must
+IsFinite :: inline (val : Vec4f) -> bool
 {
     return IsFinite(val.x) && IsFinite(val.y) && IsFinite(val.z) && IsFinite(val.w);
 }
 
-Sign :: inline (val : $T) -> T #must
+Sign :: inline (val : $T) -> T
 {
     if val < 0
         return -1;
@@ -30,62 +30,62 @@ Sign :: inline (val : $T) -> T #must
     return 0;
 }
 
-Round :: inline (value : float) -> float #must
+Round :: inline (value : float) -> float
 {
     return cast(float) (cast(int) (value + Sign(value) * 0.5));
 }
 
-Snap :: inline (value : float, grid_size : float) -> float #must
+Snap :: inline (value : float, grid_size : float) -> float
 {
     return Round(value / grid_size) * grid_size;
 }
 
-ApproxZero :: inline (val : float, epsilon : float) -> bool #must
+ApproxZero :: inline (val : float, epsilon : float) -> bool
 {
     return abs(val) <= epsilon;
 }
 
-ApproxEquals :: inline (left : float, right : float, epsilon : float) -> bool #must
+ApproxEquals :: inline (left : float, right : float, epsilon : float) -> bool
 {
     return abs(left - right) <= epsilon;
 }
 
-RightVector :: inline (q : Quatf) -> Vec3f #must
+RightVector :: inline (q : Quatf) -> Vec3f
 {
     return rotate(.{1,0,0}, q);
 }
 
-UpVector :: inline (q : Quatf) -> Vec3f #must
+UpVector :: inline (q : Quatf) -> Vec3f
 {
     return rotate(.{0,1,0}, q);
 }
 
-ForwardVector :: inline (q : Quatf) -> Vec3f #must
+ForwardVector :: inline (q : Quatf) -> Vec3f
 {
     return rotate(.{0,0,1}, q);
 }
 
-RightVector :: inline (mat : Mat4f) -> Vec3f #must
+RightVector :: inline (mat : Mat4f) -> Vec3f
 {
     return normalize(Vec3f.{mat._11, mat._21, mat._31});
 }
 
-UpVector :: inline (mat : Mat4f) -> Vec3f #must
+UpVector :: inline (mat : Mat4f) -> Vec3f
 {
     return normalize(Vec3f.{mat._12, mat._22, mat._32});
 }
 
-ForwardVector :: inline (mat : Mat4f) -> Vec3f #must
+ForwardVector :: inline (mat : Mat4f) -> Vec3f
 {
     return normalize(Vec3f.{mat._13, mat._23, mat._33});
 }
 
-TranslationVector :: inline (mat : Mat4f) -> Vec3f #must
+TranslationVector :: inline (mat : Mat4f) -> Vec3f
 {
     return .{mat._14, mat._24, mat._34};
 }
 
-RotationMatrix :: inline (mat : Mat4f) -> Mat4f #must
+RotationMatrix :: inline (mat : Mat4f) -> Mat4f
 {
     return make_matrix_from_columns(
         RightVector(mat),
@@ -95,7 +95,7 @@ RotationMatrix :: inline (mat : Mat4f) -> Mat4f #must
     );
 }
 
-Angle :: inline (a : Vec2f, b : Vec2f) -> float #must
+Angle :: inline (a : Vec2f, b : Vec2f) -> float
 {
     denom := sqrt(dot(a, a) * dot(b, b));
     if ApproxZero(denom, 0.0001)
@@ -106,14 +106,14 @@ Angle :: inline (a : Vec2f, b : Vec2f) -> float #must
     return acos(d);
 }
 
-SignedAngle :: inline (a : Vec2f, b : Vec2f) -> float #must
+SignedAngle :: inline (a : Vec2f, b : Vec2f) -> float
 {
     s := Sign(a.x * b.y - a.y * b.y);
 
     return Angle(a, b) * s;
 }
 
-Angle :: inline (a : Vec3f, b : Vec3f) -> float #must
+Angle :: inline (a : Vec3f, b : Vec3f) -> float
 {
     denom := sqrt(dot(a, a) * dot(b, b));
     if ApproxZero(denom, 0.0001)
@@ -124,7 +124,7 @@ Angle :: inline (a : Vec3f, b : Vec3f) -> float #must
     return acos(d);
 }
 
-SignedAngle :: inline (a : Vec3f, b : Vec3f, axis : Vec3f) -> float #must
+SignedAngle :: inline (a : Vec3f, b : Vec3f, axis : Vec3f) -> float
 {
     c := cross(a, b);
     s := Sign(dot(axis, c));
@@ -132,17 +132,17 @@ SignedAngle :: inline (a : Vec3f, b : Vec3f, axis : Vec3f) -> float #must
     return Angle(a, b) * s;
 }
 
-PerpendicularCW :: inline (vec : Vec2f) -> Vec2f #must
+PerpendicularCW :: inline (vec : Vec2f) -> Vec2f
 {
     return .{vec.y, -vec.x};
 }
 
-PerpendicularCCW :: inline (vec : Vec2f) -> Vec2f #must
+PerpendicularCCW :: inline (vec : Vec2f) -> Vec2f
 {
     return .{-vec.y, vec.x};
 }
 
-QuatfFromVectorToVector :: (a : Vec3f, b : Vec3f) -> Quatf #must
+QuatfFromVectorToVector :: (a : Vec3f, b : Vec3f) -> Quatf
 {
     a_norm := normalize(a);
     b_norm := normalize(b);
@@ -174,7 +174,7 @@ QuatfFromVectorToVector :: (a : Vec3f, b : Vec3f) -> Quatf #must
     return q;
 }
 
-ClipLine :: (start : Vec3f, end : Vec3f) -> Vec3f #must, Vec3f #must
+ClipLine :: (start : Vec3f, end : Vec3f) -> Vec3f, Vec3f
 {
     C := GetContext();
 
@@ -214,7 +214,7 @@ ClipLine :: (start : Vec3f, end : Vec3f) -> Vec3f #must, Vec3f #must
     return clipped_start, clipped_end;
 }
 
-WorldToScreen :: (point : Vec3f) -> bool #must, Vec2f #must
+WorldToScreen :: (point : Vec3f) -> bool, Vec2f
 {
     C := GetContext();
 
@@ -228,7 +228,7 @@ WorldToScreen :: (point : Vec3f) -> bool #must, Vec2f #must
     return false, proj.xy;
 }
 
-ProjectSphereOnScreen :: (center : Vec3f, radius : float) -> bool #must, Vec2f #must, float #must
+ProjectSphereOnScreen :: (center : Vec3f, radius : float) -> bool, Vec2f, float
 {
     C := GetContext();
 
@@ -244,7 +244,7 @@ ProjectSphereOnScreen :: (center : Vec3f, radius : float) -> bool #must, Vec2f #
     return false, proj_center, distance(proj_center, proj_radius);
 }
 
-Project2DPointOn3DSphere :: (point : Vec2f, world_space_center : Vec3f, world_space_radius : float) -> Vec3f #must
+Project2DPointOn3DSphere :: (point : Vec2f, world_space_center : Vec3f, world_space_radius : float) -> Vec3f
 {
     is_behind, screen_space_center, screen_space_radius
         := ProjectSphereOnScreen(world_space_center, world_space_radius);
@@ -263,7 +263,7 @@ Project2DPointOn3DSphere :: (point : Vec2f, world_space_center : Vec3f, world_sp
     return normalize(Vec3f.{p.x,p.y,z} - world_space_center);
 }
 
-ProjectPointOnLine2D :: (point : Vec2f, start : Vec2f, end : Vec2f) -> Vec2f #must, t : float
+ProjectPointOnLine2D :: (point : Vec2f, start : Vec2f, end : Vec2f) -> Vec2f, t : float
 {
     dir := end - start;
     if !IsFinite(dir)
@@ -276,7 +276,7 @@ ProjectPointOnLine2D :: (point : Vec2f, start : Vec2f, end : Vec2f) -> Vec2f #mu
     return start + t * dir, t;
 }
 
-ProjectPointOnLine :: (point : Vec3f, start : Vec3f, end : Vec3f) -> Vec3f #must, t : float
+ProjectPointOnLine :: (point : Vec3f, start : Vec3f, end : Vec3f) -> Vec3f, t : float
 {
     dir := end - start;
     if !IsFinite(dir)
@@ -289,7 +289,7 @@ ProjectPointOnLine :: (point : Vec3f, start : Vec3f, end : Vec3f) -> Vec3f #must
     return start + t * dir, t;
 }
 
-ProjectPointOnInfiniteLine :: (point : Vec3f, start : Vec3f, end : Vec3f) -> Vec3f #must, t : float
+ProjectPointOnInfiniteLine :: (point : Vec3f, start : Vec3f, end : Vec3f) -> Vec3f, t : float
 {
     dir := end - start;
     if !IsFinite(dir)
@@ -301,7 +301,7 @@ ProjectPointOnInfiniteLine :: (point : Vec3f, start : Vec3f, end : Vec3f) -> Vec
     return start + t * dir, t;
 }
 
-RayFromScreenPoint :: (point : Vec2f) -> origin : Vec3f #must, direction : Vec3f #must
+RayFromScreenPoint :: (point : Vec2f) -> origin : Vec3f, direction : Vec3f
 {
     C := GetContext();
 
@@ -317,7 +317,7 @@ RayFromScreenPoint :: (point : Vec2f) -> origin : Vec3f #must, direction : Vec3f
     return pos, dir;
 }
 
-RayFromMouse :: inline () -> origin : Vec3f #must, direction : Vec3f #must
+RayFromMouse :: inline () -> origin : Vec3f, direction : Vec3f
 {
     C := GetContext();
     origin, dir := RayFromScreenPoint(C.mouse_pos);
@@ -364,7 +364,7 @@ RayIntersectsPlane :: (ray_origin : Vec3f, ray_dir : Vec3f, plane_origin : Vec3f
     return false, .{}, 0;
 }
 
-LineIntersectsPlane :: (line_start : Vec3f, line_end : Vec3f, plane_origin : Vec3f, plane_normal : Vec3f) -> bool #must, Vec3f #must
+LineIntersectsPlane :: (line_start : Vec3f, line_end : Vec3f, plane_origin : Vec3f, plane_normal : Vec3f) -> bool, Vec3f
 {
     line_dir := line_end - line_start;
     if !IsFinite(line_dir)
@@ -385,7 +385,7 @@ LineIntersectsPlane :: (line_start : Vec3f, line_end : Vec3f, plane_origin : Vec
     return false, .{};
 }
 
-IsLineHovered2D :: (start : Vec2f, end : Vec2f, threshold : float) -> bool #must
+IsLineHovered2D :: (start : Vec2f, end : Vec2f, threshold : float) -> bool
 {
     C := GetContext();
 
@@ -399,7 +399,7 @@ IsLineHovered2D :: (start : Vec2f, end : Vec2f, threshold : float) -> bool #must
     return distance(mouse_on_line, C.mouse_pos) < threshold;
 }
 
-IsLineHovered :: (start : Vec3f, end : Vec3f, threshold : float) -> bool #must
+IsLineHovered :: (start : Vec3f, end : Vec3f, threshold : float) -> bool
 {
     C := GetContext();
 
@@ -414,14 +414,14 @@ IsLineHovered :: (start : Vec3f, end : Vec3f, threshold : float) -> bool #must
     return IsLineHovered2D(proj_start, proj_end, threshold);
 }
 
-IsCircleFilledHovered2D :: (center : Vec2f, radius : float) -> bool #must
+IsCircleFilledHovered2D :: (center : Vec2f, radius : float) -> bool
 {
     C := GetContext();
 
     return distance(C.mouse_pos, center) < radius;
 }
 
-IsCircleFilledHovered :: (center : Vec3f, normal : Vec3f, radius : float) -> bool #must
+IsCircleFilledHovered :: (center : Vec3f, normal : Vec3f, radius : float) -> bool
 {
     C := GetContext();
 
@@ -433,7 +433,7 @@ IsCircleFilledHovered :: (center : Vec3f, normal : Vec3f, radius : float) -> boo
     return false;
 }
 
-IsFacingCircleHovered :: (center : Vec3f, radius : float, thickness : float, tangent : Vec3f, bitangent : Vec3f, epsilon := 0.01, resolution := 200) -> bool #must
+IsFacingCircleHovered :: (center : Vec3f, radius : float, thickness : float, tangent : Vec3f, bitangent : Vec3f, epsilon := 0.01, resolution := 200) -> bool
 {
     C := GetContext();
 
@@ -471,7 +471,7 @@ IsFacingCircleHovered :: (center : Vec3f, radius : float, thickness : float, tan
     return false;
 }
 
-ToMat3f :: (mat : Mat4f) -> Mat3f #must
+ToMat3f :: (mat : Mat4f) -> Mat3f
 {
     return .{
         mat._11, mat._12, mat._13,
@@ -480,7 +480,7 @@ ToMat3f :: (mat : Mat4f) -> Mat3f #must
     };
 }
 
-QuatfFromMatrix :: inline (mat : $T/interface AnyMatrix3) -> Quatf #must
+QuatfFromMatrix :: inline (mat : $T/interface AnyMatrix3) -> Quatf
 {
     #if T == Mat4f
         ortho, _, det := polar_decomp(ToMat3f(mat));
@@ -497,7 +497,7 @@ QuatfFromMatrix :: inline (mat : $T/interface AnyMatrix3) -> Quatf #must
 // From Blender source code:
 // https://github.com/blender/blender/blob/756538b4a117cb51a15e848fa6170143b6aafcd8/source/blender/blenlib/intern/math_rotation.c#L272
 // This function will fail for matrices that are not ortho normalized and positive
-QuatfFromMatrixNoChecks :: inline (mat : $T/interface AnyMatrix3) -> Quatf #must
+QuatfFromMatrixNoChecks :: inline (mat : $T/interface AnyMatrix3) -> Quatf
 {
     /* Caller must ensure matrices aren't negative for valid results, see: T24291, T94231. */
     // assert(determinant(mat) > 0);

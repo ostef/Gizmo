@@ -40,7 +40,7 @@ void main()
 }
 GLSL
 
-CreateShader :: () -> GLuint #must
+CreateShader :: () -> GLuint
 {
     status, log_length : GLint;
 

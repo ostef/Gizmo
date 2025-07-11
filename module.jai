@@ -272,12 +272,12 @@ DestroyContext :: ()
     g_gizmo_context = null;
 }
 
-GetStyle :: inline () -> *Style #must
+GetStyle :: inline () -> *Style
 {
     return *GetContext().style;
 }
 
-GetContext :: inline () -> *GizmoContext #must
+GetContext :: inline () -> *GizmoContext
 {
     assert(g_gizmo_context != null, "Gizmo context not created");
 
@@ -298,21 +298,21 @@ SetKeyState :: inline (key : Key, state : bool)
     C.key_states[key] = state;
 }
 
-IsKeyDown :: inline (key : Key) -> bool #must
+IsKeyDown :: inline (key : Key) -> bool
 {
     C := GetContext();
 
     return C.key_states[key];
 }
 
-IsKeyPressed :: inline (key : Key) -> bool #must
+IsKeyPressed :: inline (key : Key) -> bool
 {
     C := GetContext();
 
     return !C.prev_key_states[key] && C.key_states[key];
 }
 
-IsKeyReleased :: inline (key : Key) -> bool #must
+IsKeyReleased :: inline (key : Key) -> bool
 {
     C := GetContext();
 
@@ -464,7 +464,7 @@ EndFrame :: ()
     }
 }
 
-GetID :: (str : string, hash_with_id_stack := true) -> u32 #must
+GetID :: (str : string, hash_with_id_stack := true) -> u32
 {
     C := GetContext();
     id := get_hash(str);
@@ -495,7 +495,7 @@ PopID :: ()
     pop(*C.id_stack);
 }
 
-GetGizmoMatrix :: (peek := 0) -> Mat4f #must
+GetGizmoMatrix :: (peek := 0) -> Mat4f
 {
     C := GetContext();
 

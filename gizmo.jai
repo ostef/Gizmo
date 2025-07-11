@@ -1,4 +1,4 @@
-CalculateDimFactor :: inline (center : Vec3f, axis : Vec3f) -> float #must
+CalculateDimFactor :: inline (center : Vec3f, axis : Vec3f) -> float
 {
     C := GetContext();
 
@@ -8,7 +8,7 @@ CalculateDimFactor :: inline (center : Vec3f, axis : Vec3f) -> float #must
     return clamp((1 - abs(dot(axis, center_to_camera))) * 30 - 0.1, 0, 1);
 }
 
-CalculateWidgetSize :: inline (position : Vec3f) -> float #must
+CalculateWidgetSize :: inline (position : Vec3f) -> float
 {
     C := GetContext();
 
@@ -296,17 +296,17 @@ GizmoScale :: (id : string, scale : *Vec3f, flags : GizmoFlags = 0) -> Interacti
         axes : [3]Vec3f;
     }
 
-    operator * :: (axes : ThreeAxes, vec : Vec3f) -> ThreeAxes #must
+    operator * :: (axes : ThreeAxes, vec : Vec3f) -> ThreeAxes
     {
         return .{axes.x * vec.x, axes.y * vec.y, axes.z * vec.z};
     }
 
-    GetScaleOnAxis :: (scale : ThreeAxes, axis : Vec3f) -> float #must
+    GetScaleOnAxis :: (scale : ThreeAxes, axis : Vec3f) -> float
     {
         return abs(dot(scale.x, axis)) + abs(dot(scale.y, axis)) + abs(dot(scale.z, axis));
     }
 
-    ProjectScale :: (scale : ThreeAxes, onto : ThreeAxes) -> Vec3f #must
+    ProjectScale :: (scale : ThreeAxes, onto : ThreeAxes) -> Vec3f
     {
         return .{
             GetScaleOnAxis(scale, onto.x),
